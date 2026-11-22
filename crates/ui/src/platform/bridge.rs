@@ -131,13 +131,13 @@ impl Session {
                 Ok(Value::Null)
             }
             "graphics.detach" => {
-                self.detach_surface();
+                self.detach_surface(super::viewport::slot_id(&params)?);
                 if let Some(c) = &self.composition {
                     c.commit()?;
                 }
                 Ok(json!({"active":false}))
             }
-            "graphics.info" => Ok(self.graphics_info()),
+            "graphics.info" => Ok(self.graphics_info(super::viewport::slot_id(&params)?)),
             "graphics.attach" => self.attach(params),
             "graphics.view" => {
                 let zoom = params["zoom"].as_f64().ok_or("Missing zoom")? as f32;
@@ -150,11 +150,9 @@ impl Session {
                     _ => return Err("Invalid channel".into()),
                 };
                 let motion = params["motion"].as_bool().ok_or("Missing motion setting")?;
-                let graphics = self.graphics.borrow();
-                graphics
-                    .as_ref()
-                    .ok_or("Attach the viewport first")?
-                    .options(zoom, channel, motion)?;
+                self.with_graphics(super::viewport::slot_id(&params)?, |g| {
+                    g.options(zoom, channel, motion)
+                })?;
                 Ok(params)
             }
             _ => Err(format!("Unknown command: {method}")),

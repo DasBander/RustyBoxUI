@@ -14,6 +14,30 @@
     },
     "Selection": {
       "id": "string"
+    },
+    "PageRequest": {
+      "offset": "u32",
+      "limit": "u32"
+    },
+    "Workspace": {
+      "role": "string",
+      "folder": "string?",
+      "selected": "string",
+      "count": "u32",
+      "running": "bool",
+      "skipped": "u32",
+      "generation": "u32"
+    },
+    "RenderRequest": {
+      "id": "string",
+      "viewport": "u32"
+    },
+    "Thumbnail": {
+      "id": "string",
+      "url": "string?"
+    },
+    "Ids": {
+      "ids": "string[]"
     }
   },
   "commands": {
@@ -28,6 +52,22 @@
     "importImage": {
       "input": "Empty",
       "output": "Asset?"
+    },
+    "workspace": {
+      "input": "Empty",
+      "output": "Workspace"
+    },
+    "page": {
+      "input": "PageRequest",
+      "output": "Asset[]"
+    },
+    "thumbnails": {
+      "input": "Ids",
+      "output": "Thumbnail[]"
+    },
+    "renderAsset": {
+      "input": "RenderRequest",
+      "output": "Asset"
     }
   }
 }

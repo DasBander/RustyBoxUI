@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
     />
     <title>Atlas — Texture workspace</title>
     <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="sdk/desktop.css" />
     <link rel="stylesheet" href="atlas.css" />
     <script type="module" src="atlas.js"></script>
   </head>
@@ -32,15 +33,19 @@
         <p class="breadcrumb">Workspace <span>/</span> Collections</p>
         <h1>Earth observations</h1>
       </div>
-      <button class="primary" id="import">
-        <span aria-hidden="true">＋</span> Import image <kbd>Ctrl O</kbd>
-      </button>
+      <div class="workspace-actions">
+        <button id="cancel" data-rb-action="cancel-import" hidden>Cancel scan</button>
+        <button id="import"><span aria-hidden="true">＋</span> Import image</button>
+        <button class="primary" data-rb-action="open-folder">Open folder</button>
+      </div>
     </div>
     <main>
       <section class="viewer" aria-label="Texture viewer">
         <div class="bar">
           <div class="bar-name"><span data-icon="grid"></span> Viewport</div>
           <div class="tools">
+            <button id="compare" aria-pressed="false">Compare</button
+            ><button data-rb-action="detach">Detach</button><i></i>
             <button id="fit" title="Fit image within the viewport">Fit</button
             ><button id="fill" title="Fill the viewport">Fill</button><i></i
             ><button id="zoom-out" aria-label="Zoom out">−</button><output id="zoom">100%</output
@@ -48,7 +53,16 @@
           </div>
         </div>
         <div class="stage">
-          <rb-native-view aria-label="Direct3D texture preview" role="img"></rb-native-view>
+          <rb-native-view id="primary-preview" aria-label="Direct3D texture preview" role="img"></rb-native-view>
+          <rb-native-view
+            id="reference"
+            viewport="1"
+            aria-label="Original RGB texture"
+            role="img"
+            paused
+            hidden
+          ></rb-native-view>
+          <rb-split id="compare-split" aria-controls="primary-preview" aria-label="Comparison width" hidden></rb-split>
           <div class="stage-overlay">
             <div id="file-chip" class="chip">Opening viewport…</div>
             <rb-menu id="channels"
@@ -115,6 +129,11 @@
               autocomplete="off"
               spellcheck="false"
           /></rb-field>
+        </div>
+        <div id="project-browser" hidden>
+          <rb-tree id="folders" aria-label="Project folders"></rb-tree>
+          <rb-split value="22" min="12" max="45" aria-controls="folders" aria-label="Folder column width"></rb-split>
+          <rb-table id="files" aria-label="Project assets"></rb-table>
         </div>
         <div id="assets" role="group" aria-label="Select an asset"></div>
       </section>

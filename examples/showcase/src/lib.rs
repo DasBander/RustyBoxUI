@@ -10,7 +10,7 @@ use std::{
 };
 use windows::Win32::UI::Input::XboxController::*;
 
-type Setup = fn(&mut State, &mut Commands<State>, &Path);
+type Setup = fn(&mut State, &mut Commands<State>, &Path, &rustybox_assets::Assets) -> Result<()>;
 
 pub struct App {
     key: &'static str,
@@ -23,13 +23,13 @@ pub struct App {
 pub const RACING: App = App {
     key: "racing",
     title: "Nightshift — Red Mesa Circuit",
-    shader: Some(scene::RACING),
+    shader: Some("racing.hlsl"),
     setup: None,
 };
 pub const MATERIAL: App = App {
     key: "material",
     title: "Foundry — Material editor",
-    shader: Some(scene::MATERIAL),
+    shader: Some("material.hlsl"),
     setup: None,
 };
 pub const AUDIO: App = App {
@@ -42,18 +42,20 @@ pub const COUCH: App = App {
     key: "couch",
     title: "Couch Library",
     shader: None,
-    setup: Some(|_, commands, _| {
+    setup: Some(|_, commands, _, _| {
         commands.register("host.gamepad", State::gamepad);
         commands.register("host.launchRace", State::launch_race);
+        Ok(())
     }),
 };
 pub const PATCHER: App = App {
     key: "patcher",
     title: "Relay — Game updates",
     shader: None,
-    setup: Some(|state, commands, profile| {
-        state.patcher = Some(patch::Worker::new(profile.join("Relay-1.4")));
+    setup: Some(|state, commands, profile, assets| {
+        state.patcher = Some(patch::Worker::new(profile.join("Relay-1.4"), assets)?);
         commands.register("host.patch", State::patch);
+        Ok(())
     }),
 };
 fn argument(name: &str) -> Option<PathBuf> {
@@ -66,7 +68,7 @@ fn argument(name: &str) -> Option<PathBuf> {
     None
 }
 struct State {
-    shader: Option<&'static str>,
+    shader: Option<(String, String)>,
     scene: Option<scene::Scene>,
     frame: Option<scene::Frame>,
     patcher: Option<patch::Worker>,
@@ -75,7 +77,8 @@ impl State {
     fn draw(&mut self, view: &View, frame: scene::Frame) -> Result<()> {
         let device = view.device()?;
         if self.scene.as_ref().is_none_or(|s| !s.matches(&device)) {
-            self.scene = Some(scene::Scene::new(device, self.shader.ok_or("No scene")?)?);
+            let (vs, ps) = self.shader.as_ref().ok_or("No scene")?;
+            self.scene = Some(scene::Scene::new(device, vs, ps)?);
         }
         self.scene.as_mut().unwrap().draw(view, &frame)?;
         self.frame = Some(frame);
@@ -163,13 +166,25 @@ fn run(app: App, hidden: bool) -> Result<()> {
         .join("RustyBoxUI")
         .join(key),
     };
+    let content = rustybox_assets::Assets::open(&assets)?;
+    let shader_text = |name: &str| -> Result<String> {
+        String::from_utf8(
+            content
+                .read(&format!("_native/{name}"))?
+                .ok_or("Missing scene shader")?,
+        )
+        .map_err(|e| e.to_string())
+    };
     let mut config = Window::new(title, assets, profile.clone())?;
     config.size = (1280, 800);
     config.hidden = hidden;
     config.composed = shader.is_some();
     let mut view = config.open_with_origin(AssetOrigin::Reserved)?;
     let mut state = State {
-        shader,
+        shader: match shader {
+            Some(name) => Some((shader_text("fullscreen.hlsl")?, shader_text(name)?)),
+            None => None,
+        },
         scene: None,
         frame: None,
         patcher: None,
@@ -179,7 +194,7 @@ fn run(app: App, hidden: bool) -> Result<()> {
         commands.register("host.scene", State::draw);
     }
     if let Some(setup) = setup {
-        setup(&mut state, &mut commands, &profile);
+        setup(&mut state, &mut commands, &profile, &content)?;
     }
     while view.poll()? {
         while let Some(event) = view.next_event()? {

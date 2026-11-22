@@ -1,4 +1,4 @@
-import { icon, escapeHTML as esc } from '../sdk/components.js';
+import { icon, escapeHTML as esc, gameWordmark } from '../sdk/components.js';
 
 export function heading(title, subtitle = '', right = '') {
   return /* HTML */ `<div class="page-heading">
@@ -13,9 +13,7 @@ export function featuredHero(game, wishlisted) {
   return /* HTML */ `<article class="hero" data-game="${game.id}" aria-labelledby="hero-title">
     <img class="hero-art" src="${game.art}" fetchpriority="high" alt="" />
     <div class="hero-copy">
-      <h2 class="feature-logo" id="hero-title" aria-label="${esc(game.title)}">
-        ${esc(game.wordmark)}${game.subtitle ? `<small>${esc(game.subtitle)}</small>` : ''}
-      </h2>
+      <h2 class="feature-logo" id="hero-title" aria-label="${esc(game.title)}">${gameWordmark(game)}</h2>
       <div class="hero-info">
         <p>${esc(game.description)}</p>
         <div class="hero-buttons">

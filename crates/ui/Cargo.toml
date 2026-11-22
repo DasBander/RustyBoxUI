@@ -10,10 +10,12 @@ name = "rustybox_ui"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+rustybox-assets = { path = "../assets" }
+percent-encoding = "2"
 rustybox-core = { path = "../core" }
 serde_json.workspace = true
 libloading.workspace = true
 
 [target.'cfg(windows)'.dependencies]
-windows.workspace = true
+windows = { workspace = true, features = ["Win32_UI_Shell", "Win32_System_Com_StructuredStorage"] }
 webview2-com = "0.39.1"

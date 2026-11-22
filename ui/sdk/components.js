@@ -4,6 +4,11 @@ export const escapeHTML = (value) =>
     /[&<>"']/g,
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
   );
+// Keep the catalog's intentional line breaks intact when the CSS preserves whitespace.
+export function gameWordmark(game) {
+  const title = escapeHTML(game.wordmark || game.title);
+  return game.subtitle ? title + `<small>${escapeHTML(game.subtitle)}</small>` : title;
+}
 const paths = {
   store: 'M3 9h18l-2-6H5L3 9Zm1 0v12h16V9M9 21v-8h6v8M3 9c0 4 6 4 6 0 0 4 6 4 6 0 0 4 6 4 6 0',
   library: 'M4 4h5v16H4zM12 4h3v16h-3zM18 4l3 1-1 15-3-1z',
@@ -82,11 +87,7 @@ class RBGameCard extends HTMLElement {
     this.innerHTML = /* HTML */ `<article class="game-card" data-game="${escapeHTML(g.id)}">
       <div class="game-cover">
         <img src="${escapeHTML(g.cover || g.art)}" alt="" loading="lazy" />
-        <div class="cover-wordmark" aria-hidden="true">
-          ${escapeHTML(g.wordmark || g.title)}${g.subtitle
-            ? `<small>${escapeHTML(g.subtitle)}</small>`
-            : ''}
-        </div>
+        <div class="cover-wordmark" aria-hidden="true">${gameWordmark(g)}</div>
         <button class="cover-open" aria-label="Explore ${title}"></button>
         <button
           class="wishlist-button"
@@ -111,6 +112,9 @@ class RBGameCard extends HTMLElement {
   }
 }
 class RBNativeView extends HTMLElement {
+  get viewport() {
+    return Number(this.getAttribute('viewport') ?? 0);
+  }
   connectedCallback() {
     this._scroll = () => this.sync();
     this._observer = new ResizeObserver(this._scroll);
@@ -133,11 +137,12 @@ class RBNativeView extends HTMLElement {
       const r = this.getBoundingClientRect();
       if (r.width < 1 || r.height < 1) return;
       if (r.top < 0 || r.left < 0 || r.bottom > innerHeight || r.right > innerWidth) {
-        await this.client.invoke('graphics.detach').catch(() => {});
+        await this.client.invoke('graphics.detach', { viewport: this.viewport }).catch(() => {});
         continue;
       }
       try {
         const info = await this.client.invoke('graphics.attach', {
+          viewport: this.viewport,
           x: r.x,
           y: r.y,
           width: r.width,
@@ -163,7 +168,7 @@ class RBNativeView extends HTMLElement {
     this._observer?.disconnect();
     window.removeEventListener('resize', this._scroll);
     document.removeEventListener('scroll', this._scroll, true);
-    this.client?.invoke('graphics.detach').catch(() => {});
+    this.client?.invoke('graphics.detach', { viewport: this.viewport }).catch(() => {});
   }
 }
 for (const [name, component] of [

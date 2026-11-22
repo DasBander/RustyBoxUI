@@ -12,10 +12,20 @@ using winrt::Windows::Data::Json::JsonValue;
 LRESULT CALLBACK window_proc(HWND window, UINT message, WPARAM wparam, LPARAM lparam) {
     auto *view = reinterpret_cast<rustybox::Runtime *>(GetWindowLongPtrW(window, GWLP_USERDATA));
     switch (message) {
-    case WM_NCCALCSIZE:
-        if (wparam)
-            return 0;
-        break;
+    case WM_NCCALCSIZE: {
+        // The embedding host owns the outer frame. A maximized resize border may lie offscreen.
+        if (IsZoomed(window)) {
+            RECT *client = wparam ? &reinterpret_cast<NCCALCSIZE_PARAMS *>(lparam)->rgrc[0]
+                                  : reinterpret_cast<RECT *>(lparam);
+            MONITORINFO monitor{sizeof(MONITORINFO)};
+            RECT visible{};
+            if (GetMonitorInfoW(MonitorFromRect(client, MONITOR_DEFAULTTONEAREST), &monitor) &&
+                IntersectRect(&visible, client, &monitor.rcWork)) {
+                *client = visible;
+            }
+        }
+        return 0;
+    }
     case WM_SIZE:
         if (view && LOWORD(lparam) && HIWORD(lparam)) {
             // Win32 callbacks must keep C++ exceptions on this side of the message pump.

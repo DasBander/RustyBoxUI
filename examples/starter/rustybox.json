@@ -1,0 +1,11 @@
+{
+  "identity": "RustyBoxUI.Starter",
+  "name": "RustyBox Starter",
+  "description": "RustyBox desktop starter",
+  "copyright": "Copyright © RustyBoxUI contributors",
+  "publisher": "CN=RustyBox Development",
+  "publisherDisplayName": "RustyBox",
+  "fileTypes": [".rbnote"],
+  "protocols": ["rustybox-note"],
+  "version": "0.5.0.0"
+}

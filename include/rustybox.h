@@ -64,6 +64,9 @@ RB_API int32_t rb_wait(RBHandle view, uint32_t maximum_ms);
    Submit immediate-context writes on the view thread before the next tick. */
 RB_API int32_t rb_graphics_device(RBHandle view, void **device);
 RB_API int32_t rb_graphics_texture(RBHandle view, void *texture);
+/* Each numbered viewport owns its D3D11 device. The original APIs address viewport zero. */
+RB_API int32_t rb_graphics_device_at(RBHandle view, uint32_t viewport, void **device);
+RB_API int32_t rb_graphics_texture_at(RBHandle view, uint32_t viewport, void *texture);
 RB_API int32_t rb_graphics_reset(RBHandle view);
 RB_API int32_t rb_poll(RBHandle handle);
 RB_API int32_t rb_tick(RBHandle handle);

@@ -504,3 +504,96 @@ footer {
     display: none;
   }
 }
+
+[hidden] {
+  display: none !important;
+}
+.workspace-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.workspace-actions > button:not(.primary) {
+  color: var(--muted);
+  padding: 8px;
+  font-size: 13px;
+}
+.workspace-actions > button:hover {
+  color: #fff;
+}
+.stage.comparing > rb-native-view:first-child {
+  right: calc(100% - var(--rb-split, 50%));
+}
+.stage.comparing > #reference {
+  left: var(--rb-split, 50%);
+}
+#compare-split {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--rb-split, 50%);
+  width: 7px;
+  transform: translateX(-50%);
+  background: #b4cee0;
+}
+#project-browser {
+  display: grid;
+  grid-template-columns: var(--rb-split, 22%) 6px minmax(0, 1fr);
+  height: clamp(126px, 23vh, 245px);
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  overflow: hidden;
+  font-size: 12px;
+  --rb-selected: #23394b;
+  --rb-panel: #25262d;
+  --rb-separator: #36383f;
+}
+#folders {
+  padding: 5px;
+  background: #202025;
+}
+#files {
+  background: #1c1d22;
+}
+#files .rb-table-row:first-child {
+  border: 0;
+}
+.file-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.file-cell img {
+  width: 37px;
+  height: 27px;
+  object-fit: cover;
+  border-radius: 3px;
+  background: #31353b;
+}
+.file-cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body.detached .heading,
+body.detached .collection,
+body.detached aside,
+body.detached [data-rb-action='detach'],
+body.detached #compare {
+  display: none;
+}
+body.detached main {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+@media (max-width: 650px) {
+  .tools {
+    gap: 1px;
+  }
+  .tools button {
+    padding-inline: 4px;
+  }
+  .workspace-actions {
+    gap: 2px;
+  }
+}

@@ -28,13 +28,31 @@ export class RustyBoxClient extends EventTarget {
   readonly isNative: boolean;
   invoke(method: 'runtime.info', params?: {}, options?: InvokeOptions): Promise<RuntimeInfo>;
   invoke(
-    method: 'graphics.info' | 'graphics.attach',
-    params?: { x: number; y: number; width: number; height: number },
+    method: 'graphics.info',
+    params?: { viewport?: number },
+    options?: InvokeOptions
+  ): Promise<GraphicsInfo>;
+  invoke(
+    method: 'graphics.attach',
+    params: {
+      viewport?: number;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      viewportWidth?: number;
+      viewportHeight?: number;
+    },
     options?: InvokeOptions
   ): Promise<GraphicsInfo>;
   invoke(
     method: 'graphics.view',
-    params: { zoom: number; channel: 'rgb' | 'red' | 'green' | 'blue' | 'alpha'; motion: boolean },
+    params: {
+      viewport?: number;
+      zoom: number;
+      channel: 'rgb' | 'red' | 'green' | 'blue' | 'alpha';
+      motion: boolean;
+    },
     options?: InvokeOptions
   ): Promise<{ zoom: number; channel: string; motion: boolean }>;
   invoke<T = unknown>(method: string, params?: unknown, options?: InvokeOptions): Promise<T>;

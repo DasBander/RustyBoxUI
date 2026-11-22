@@ -9,12 +9,16 @@
 | `crates/ui/src/platform/` | Win32 window messages, WebView2 initialization, native command routing and D3D viewport updates |
 | `crates/ui/src/composition.rs`, `storage.rs` | Composition input routing and per-profile storage workers |
 | `crates/graphics/src/` | D3D11 device, swap chain, texture ownership and rendering |
+| `crates/assets/src/` | Authenticated package format, executable binding and native reads |
+| `crates/cli/src/` | Cargo subcommand and build tool invocation |
 | `crates/sdk/src/` | Rust window builder and DLL loading in `lib.rs`, typed command routing in `commands.rs` |
 | `ui/sdk/` | Browser client, web components, title bar behavior and TypeScript types |
 
 In the Windows runtime, start with `platform/window.rs` for dragging, resizing and frame timers. `startup.rs` owns asynchronous creation and cancellation. `webview.rs` sets the local origin and navigation handlers, `bridge.rs` routes page messages and `viewport.rs` manages graphics attachment and recovery. In the storefront, `ui/app.js` handles navigation and interaction, while `ui/storefront/views.js` renders the pages and `profile.js` maintains saved state.
 
 ## Runtime boundaries
+
+The custom title bar uses the native window’s client area. A maximized Win32 resize border can extend offscreen. During non-client layout the runtime intersects the proposed client rectangle with the destination monitor’s work area, so the title bar and footer stay visible at that monitor’s DPI. The C++ example does the same for the top-level window it owns.
 
 The native ABI is C with explicit version and structure-size checks. A Rust host and a C++ host dynamically load the same `rustybox_ui.dll`. The UI DLL statically links its Rust implementation dependencies and WebView2 loader. The actual WebView2 engine remains an installed Microsoft runtime.
 
@@ -37,15 +41,15 @@ A profile registry shares one locked settings file and writer thread among in-pr
 
 ## Assets and trust
 
-The embedding application chooses a local asset directory. WebView2 maps it to one HTTPS origin per view. `RB_RESERVED_ORIGIN` selects `rustybox.example`. With the flag absent, existing hosts keep `rustybox.local`. The view checks its selected origin on navigation, frame navigation, incoming commands and outgoing replies. Native settings belong to the profile, and browser-managed state belongs to the origin. External top-level navigation and popups are blocked. Generic host objects are disabled, and device permissions default to denied. The supplied frontend restricts subresources with CSP. Future remote-content support needs a separate unprivileged view policy; it must not inherit native command access implicitly.
+During development the host supplies a local directory mapped to one HTTPS origin per view. A sealed host resolves its executable-bound package, authenticates entries and serves the same origin from memory through WebView2 resource requests. [Package format and distribution](PACKAGING.md) `RB_RESERVED_ORIGIN` selects `rustybox.example`. With the flag absent, existing hosts keep `rustybox.local`. The view checks its selected origin on navigation, frame navigation, incoming commands and outgoing replies. Native settings belong to the profile, and browser-managed state belongs to the origin. External top-level navigation and popups are blocked. Generic host objects are disabled, and device permissions default to denied. The supplied frontend restricts subresources with CSP. Future remote-content support needs a separate unprivileged view policy; it must not inherit native command access implicitly.
 
 ## Graphics
 
 Both modes use a D3D11 device, a DXGI flip-model swap chain and a shader resource view for the current texture. The host obtains the viewport device through the C ABI. The graphics DLL checks device identity, array size, sample count and format before replacing the existing texture. Sampling, zoom, channel isolation and alpha preview run on the GPU.
 
-The default mode uses a child HWND. With `RB_COMPOSED`, a DirectComposition root holds a swap-chain visual below a transparent WebView2 visual. The DOM receives mouse movement, capture, scrolling and focus through the composition controller. UI Automation requests use the controller's automation provider. [WebView2 visual hosting](https://learn.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/icorewebview2compositioncontroller)
+The default mode uses a child HWND. With `RB_COMPOSED`, a DirectComposition root holds an independent swap-chain visual per viewport below a transparent WebView2 visual. The DOM receives mouse movement, capture, scrolling and focus through the composition controller. UI Automation requests use the controller's automation provider. [WebView2 visual hosting](https://learn.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/icorewebview2compositioncontroller)
 
-Layout crosses the bridge in CSS pixels and converts to native pixels at the current window DPI. Out-of-viewport panels detach. The renderer checks the D3D11 device status even when a hidden swap chain accepts presentation. The runtime retries device creation with bounded backoff after frame failure. The host receives `graphics_restored` and resubmits its content. Atlas keeps one decoded image for this purpose. `rb_graphics_reset` exercises the same recovery path.
+Layout crosses the bridge in CSS pixels. The runtime combines the WebView2 controller’s rasterization scale and zoom factor, then rounds the rectangle’s edges to device pixels. It uses window DPI as the fallback for older controllers. Out-of-viewport panels detach. The renderer checks the D3D11 device status even when a hidden swap chain accepts presentation. The runtime retries device creation with bounded backoff after frame failure. The host receives `graphics_restored` and resubmits its content. Atlas keeps one decoded image for this purpose. `rb_graphics_reset` exercises the same recovery path.
 
 ## Shutdown
 

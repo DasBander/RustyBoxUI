@@ -27,7 +27,7 @@ try {
         # Cargo places the static-CRT build under the explicit MSVC target triple.
         $compiled = Join-Path $projectRoot 'target\x86_64-pc-windows-msvc\release'
         New-Item -ItemType Directory -Path $output -Force | Out-Null
-        foreach ($file in ($runtimeDlls + $importLibraries + $rustHosts)) {
+        foreach ($file in ($runtimeDlls + $importLibraries + $rustHosts + "cargo-rustybox.exe")) {
             Copy-Item -LiteralPath (Join-Path $compiled $file) -Destination $output -Force
         }
     }

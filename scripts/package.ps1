@@ -7,7 +7,7 @@ if (-not $SkipBuild) {
     & (Join-Path $PSScriptRoot 'build.ps1') -Configuration release
 }
 if (-not $Destination) {
-    $Destination = Join-Path $projectRoot 'dist\RustyBoxUI-0.3.6'
+    $Destination = Join-Path $projectRoot 'dist\RustyBoxUI-0.5.0'
 }
 $destination = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Destination).TrimEnd('\')
 $parent = Split-Path -Parent $destination
@@ -32,21 +32,21 @@ $stageRoot = Join-Path $parent ('.rustybox-package-' + [guid]::NewGuid().ToStrin
 $bundle = Join-Path $stageRoot $name
 New-Item -ItemType Directory -Path $bundle -Force | Out-Null
 try {
-    foreach ($file in ($runtimeDlls + $importLibraries + $rustHosts + 'rustybox-cpp-host.exe')) {
+    foreach ($file in ($runtimeDlls + $importLibraries + $rustHosts + @('rustybox-cpp-host.exe','cargo-rustybox.exe'))) {
         Copy-Item -LiteralPath (Join-Path $projectRoot "target\release\$file") -Destination $bundle
     }
     Copy-AppAssets $projectRoot $bundle
     foreach ($folder in 'crates', 'examples', 'scripts', '.cargo', 'screenshots') {
         New-Item -ItemType Directory -Path (Join-Path $bundle $folder) | Out-Null
     }
-    foreach ($crate in 'core', 'sdk') {
+    foreach ($crate in 'core', 'sdk', 'assets', 'build') {
         $crateOut = New-Item -ItemType Directory -Path (Join-Path $bundle "crates\$crate")
         foreach ($item in 'src', 'Cargo.toml') {
             Copy-Item -LiteralPath (Join-Path $projectRoot "crates\$crate\$item") -Destination $crateOut.FullName -Recurse
         }
     }
     $examples = [ordered]@{
-        starter = @('.gitignore', 'Cargo.toml', 'src', 'ui', 'commands.json')
+        starter = @('rustybox.json', 'build.rs', '.gitignore', 'Cargo.toml', 'src', 'ui', 'commands.json')
         atlas = @('Cargo.toml', 'src', 'ui', 'commands.json')
         steam = @('Cargo.toml', 'src', 'ui', 'commands.json')
         showcase = @('Cargo.toml', 'src', 'common') + $showcaseApps
@@ -60,7 +60,7 @@ try {
     }
     $sdkScripts = @(
         'stage-ui.ps1', 'showcases.ps1', 'new-app.ps1', 'build-starter.ps1'
-        'generate-commands.mjs', 'install.ps1', 'windows-release.toml', 'cargo-paths.ps1'
+        'dev.mjs', 'package-app.ps1', 'msix.ps1', 'publish.ps1', 'generate-commands.mjs', 'install.ps1', 'windows-release.toml', 'cargo-paths.ps1'
     )
     foreach ($file in $sdkScripts) {
         Copy-Item -LiteralPath (Join-Path $PSScriptRoot $file) -Destination (Join-Path $bundle 'scripts')
@@ -77,7 +77,7 @@ try {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'windows-release.toml') -Destination (Join-Path $bundle '.cargo\config.toml')
     $manifest = @'
 [workspace]
-members = ["crates/core", "crates/sdk", "examples/starter", "examples/atlas", "examples/steam", "examples/showcase"]
+members = ["crates/assets", "crates/build", "crates/core", "crates/sdk", "examples/starter", "examples/atlas", "examples/steam", "examples/showcase"]
 resolver = "2"
 '@
     $manifestPath = Join-Path $bundle 'Cargo.toml'
@@ -85,11 +85,15 @@ resolver = "2"
     & cargo metadata --offline --manifest-path $manifestPath --format-version 1 | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve the standalone SDK workspace' }
 
+    & (Join-Path $PSScriptRoot 'runtime.ps1') -Sdk $bundle
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    $archive = Join-Path $parent 'RustyBoxUI-0.3.6-windows-x64.zip'
+    $archive = Join-Path $parent 'RustyBoxUI-0.5.0-windows-x64.zip'
     $stagedArchive = Join-Path $stageRoot 'release.zip'
     [IO.Compression.ZipFile]::CreateFromDirectory($bundle, $stagedArchive, 'Optimal', $true)
 
+    $runtimeArchive = Join-Path $parent 'RustyBoxUI-0.5.0-apps-windows-x64.zip'
+    $stagedRuntime = Join-Path $stageRoot 'runtime.zip'
+    [IO.Compression.ZipFile]::CreateFromDirectory((Join-Path $bundle 'runtime'), $stagedRuntime, 'Optimal', $false)
     if ((Split-Path -Parent $bundle) -ne $stageRoot -or (Split-Path -Parent $destination) -ne $parent) {
         throw 'Invalid SDK staging paths'
     }
@@ -112,6 +116,10 @@ resolver = "2"
     } else {
         [IO.File]::Move($stagedArchive, $archive)
     }
+    if ([IO.File]::Exists($runtimeArchive)) {
+        [IO.File]::Replace($stagedRuntime,$runtimeArchive,[NullString]::Value)
+    } else { [IO.File]::Move($stagedRuntime,$runtimeArchive) }
+    Write-Output "Packaged applications: $runtimeArchive"
     Write-Output "Packaged SDK: $archive"
 } finally {
     if ((Split-Path -Parent ([IO.Path]::GetFullPath($stageRoot))) -eq $parent -and

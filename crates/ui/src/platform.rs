@@ -1,5 +1,6 @@
 //! Thread-affine view registry and shutdown for the Windows runtime.
 mod bridge;
+mod resources;
 mod startup;
 mod viewport;
 mod webview;
@@ -7,7 +8,7 @@ mod window;
 pub use startup::{begin, cancel, collect, finish};
 pub use window::{pump, wait};
 
-use crate::{composition::Composition, graphics::Graphics, storage::Storage};
+use crate::{composition::Composition, storage::Storage};
 use rustybox_core::AssetOrigin;
 use std::{
     cell::{Cell, RefCell},
@@ -35,10 +36,8 @@ pub struct Session {
     webview: RefCell<Option<ICoreWebView2>>,
     pub events: RefCell<VecDeque<Vec<u8>>>,
     storage: Storage,
-    pub graphics: RefCell<Option<Graphics>>,
+    surfaces: RefCell<HashMap<u32, Rc<viewport::Surface>>>,
     composition: Option<Composition>,
-    geometry: Cell<Option<(i32, i32, u32, u32)>>,
-    recovery: Cell<Option<(Instant, u8)>>,
     started: Instant,
     last_frame: Cell<Instant>,
     graphics_path: PathBuf,
@@ -56,7 +55,10 @@ pub fn get(id: u64) -> Option<Rc<Session>> {
 impl Session {
     pub fn shutdown(&self) {
         self.closed.set(true);
-        self.detach_surface();
+        let ids: Vec<_> = self.surfaces.borrow().keys().copied().collect();
+        for id in ids {
+            self.detach_surface(id);
+        }
         self.webview.borrow_mut().take();
         if let Some(controller) = self.controller.borrow_mut().take() {
             unsafe {

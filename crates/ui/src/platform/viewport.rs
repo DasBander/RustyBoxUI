@@ -4,12 +4,55 @@ use crate::graphics::Graphics;
 use rustybox_core::response;
 use serde_json::{Value, json};
 use std::time::{Duration, Instant};
+use webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2Controller3;
 use windows::Win32::{
     Foundation::*,
     UI::{HiDpi::*, WindowsAndMessaging::*},
 };
+use windows::core::Interface;
 
+use std::{
+    cell::{Cell, RefCell},
+    rc::Rc,
+};
+use windows::Win32::Graphics::DirectComposition::IDCompositionVisual;
+
+type Bounds = (i32, i32, u32, u32);
+#[derive(Default)]
+pub(super) struct Surface {
+    graphics: RefCell<Option<Graphics>>,
+    visual: RefCell<Option<IDCompositionVisual>>,
+    geometry: Cell<Option<Bounds>>,
+    recovery: Cell<Option<(Instant, u8)>>,
+}
+pub(super) fn slot_id(params: &Value) -> Result<u32, String> {
+    match params.get("viewport") {
+        None => Ok(0),
+        Some(id) => id
+            .as_u64()
+            .and_then(|id| u32::try_from(id).ok())
+            .ok_or_else(|| "Invalid viewport ID".into()),
+    }
+}
 impl Session {
+    fn surface(&self, id: u32) -> Option<Rc<Surface>> {
+        self.surfaces.borrow().get(&id).cloned()
+    }
+    pub fn with_graphics<T>(
+        &self,
+        id: u32,
+        f: impl FnOnce(&mut Graphics) -> Result<T, String>,
+    ) -> Result<T, String> {
+        let s = self
+            .surface(id)
+            .ok_or("Attach the graphics viewport first")?;
+        let mut renderer = s
+            .graphics
+            .try_borrow_mut()
+            .map_err(|_| "Viewport is busy")?;
+        f(renderer.as_mut().ok_or("Viewport device unavailable")?)
+    }
+
     pub(super) fn attach(&self, p: Value) -> Result<Value, String> {
         let dimension = |key: &str| -> Result<f64, String> {
             let n = p
@@ -22,7 +65,18 @@ impl Session {
                 Ok(n)
             }
         };
-        let scale = unsafe { GetDpiForWindow(self.hwnd) } as f64 / 96.;
+        // WebView2 also applies Windows text scaling and page zoom to CSS coordinates.
+        let mut raster = f64::from(unsafe { GetDpiForWindow(self.hwnd) }.max(96)) / 96.;
+        let mut zoom = 1.;
+        if let Some(controller) = self.controller.borrow().as_ref() {
+            unsafe {
+                if let Ok(controller3) = controller.cast::<ICoreWebView2Controller3>() {
+                    let _ = controller3.RasterizationScale(&mut raster);
+                }
+                let _ = controller.ZoomFactor(&mut zoom);
+            }
+        }
+        let scale = raster * zoom;
         let left = dimension("x")?;
         let top = dimension("y")?;
         let x = (left * scale).round() as i32;
@@ -57,51 +111,79 @@ impl Session {
             return Err("Native surface must fit inside the client area".into());
         }
         let bounds = (x, y, (right - x) as u32, (bottom - y) as u32);
-        if self.geometry.get() != Some(bounds) || self.graphics.borrow().is_none() {
-            self.ensure_surface(bounds)?;
-            if self.geometry.get().is_none()
-                && unsafe { SetTimer(Some(self.hwnd), FRAME_TIMER, FRAME_INTERVAL_MS, None) } == 0
-            {
-                self.detach_surface();
-                return Err("Could not start the viewport frame timer".into());
+        let id = slot_id(&p)?;
+        let surface = match self.surface(id) {
+            Some(surface) => surface,
+            None => {
+                if self.surfaces.borrow().len() >= 16 {
+                    return Err("A window supports up to 16 viewports".into());
+                }
+                let surface = Rc::new(Surface::default());
+                self.surfaces.borrow_mut().insert(id, surface.clone());
+                surface
             }
-            self.geometry.set(Some(bounds));
-            self.recovery.set(None);
-            // ResizeBuffers discards the previous image. Fill the new buffer immediately.
-            self.present(true);
+        };
+        if surface.geometry.get() != Some(bounds) || surface.graphics.borrow().is_none() {
+            if let Err(error) = self.ensure_surface(&surface, bounds) {
+                self.detach_surface(id);
+                return Err(error);
+            }
+            if unsafe { SetTimer(Some(self.hwnd), FRAME_TIMER, FRAME_INTERVAL_MS, None) } == 0 {
+                self.detach_surface(id);
+                return Err("Could not start viewport frame timer".into());
+            }
+            surface.geometry.set(Some(bounds));
+            surface.recovery.set(None);
+            self.present_surface(id, &surface);
         }
-        let mut info = self.graphics_info();
+        let mut info = self.graphics_info(id);
         if stale {
             info["layoutPending"] = true.into();
         }
         Ok(info)
     }
-    pub(super) fn graphics_info(&self) -> Value {
-        let graphics = self.graphics.borrow();
+    pub(super) fn graphics_info(&self, id: u32) -> Value {
+        let Some(surface) = self.surface(id) else {
+            return json!({"active":false,"viewport":id});
+        };
+        let graphics = surface.graphics.borrow();
         let Some(graphics) = graphics.as_ref() else {
-            return json!({"active":false});
+            return json!({"active":false,"viewport":id});
         };
         let mut info = graphics.info();
-        if let Some((x, y, width, height)) = self.geometry.get() {
-            info["bounds"] = json!({ "x": x, "y": y, "width": width, "height": height });
+        info["viewport"] = id.into();
+        if let Some((x, y, width, height)) = surface.geometry.get() {
+            info["bounds"] = json!({ "x":x,"y":y,"width":width,"height":height });
         }
         info
     }
-    pub(super) fn detach_surface(&self) {
-        if self.geometry.take().is_some() {
+    pub(super) fn detach_surface(&self, id: u32) {
+        let surface = self.surfaces.borrow_mut().remove(&id);
+        if let Some(surface) = surface {
+            surface.graphics.borrow_mut().take();
+            if let (Some(comp), Some(visual)) =
+                (&self.composition, surface.visual.borrow_mut().take())
+            {
+                comp.remove_surface(&visual);
+            }
+        }
+        if self.surfaces.borrow().is_empty() {
             unsafe {
                 let _ = KillTimer(Some(self.hwnd), FRAME_TIMER);
             }
         }
-        self.recovery.set(None);
-        self.graphics.borrow_mut().take();
     }
-    fn ensure_surface(&self, (x, y, w, h): (i32, i32, u32, u32)) -> Result<(), String> {
-        let mut graphics = self.graphics.borrow_mut();
+    fn ensure_surface(&self, s: &Surface, (x, y, w, h): Bounds) -> Result<(), String> {
+        if s.visual.borrow().is_none()
+            && let Some(comp) = &self.composition
+        {
+            *s.visual.borrow_mut() = Some(comp.create_surface()?);
+        }
+        let mut graphics = s.graphics.borrow_mut();
         if graphics.is_none() {
             *graphics = Some(Graphics::load(
                 self.hwnd.0 as usize,
-                self.composition.as_ref().map(|c| &c.surface),
+                s.visual.borrow().as_ref(),
                 &self.graphics_path,
                 w,
                 h,
@@ -114,16 +196,16 @@ impl Session {
         Ok(())
     }
     pub fn reset_graphics(&self) {
-        if self.geometry.get().is_some() {
-            self.graphics.borrow_mut().take();
-            self.recovery.set(Some((Instant::now(), 0)));
+        for surface in self.surfaces.borrow().values() {
+            surface.graphics.borrow_mut().take();
+            surface.recovery.set(Some((Instant::now(), 0)));
         }
     }
     pub fn wait_ms(&self, maximum: u32) -> u32 {
-        if self.graphics.borrow().is_some() || self.recovery.get().is_some() {
-            maximum.min(16)
-        } else {
+        if self.surfaces.borrow().is_empty() {
             maximum
+        } else {
+            maximum.min(FRAME_INTERVAL_MS)
         }
     }
     pub fn fit(&self) {
@@ -143,27 +225,49 @@ impl Session {
         if unsafe { IsIconic(GetAncestor(self.hwnd, GA_ROOT)).as_bool() } {
             return;
         }
-        if let Some((next, attempt)) = self.recovery.get()
-            && Instant::now() >= next
-            && let Some(bounds) = self.geometry.get()
-        {
-            match self.ensure_surface(bounds) {
-                Ok(()) => {
-                    self.recovery.set(None);
-                    self.emit(json!({"event":"graphics_restored"}));
-                    let _ = self.post(json!({"v":1,"event":"graphics-restored","data":{}}));
+        let slots = self.surfaces.borrow().clone();
+        for (id, surface) in slots {
+            if let Some((next, attempt)) = surface.recovery.get()
+                && Instant::now() >= next
+                && let Some(bounds) = surface.geometry.get()
+            {
+                match self.ensure_surface(&surface, bounds) {
+                    Ok(()) => {
+                        surface.recovery.set(None);
+                        self.emit(json!({"event":"graphics_restored","viewport":id}));
+                        let _ = self.post(
+                            json!({"v":1,"event":"graphics-restored","data":{"viewport":id}}),
+                        );
+                    }
+                    Err(error) if attempt >= 3 => {
+                        self.detach_surface(id);
+                        self.emit(json!({"event":"graphics_failed","viewport":id,"message":error}));
+                    }
+                    Err(_) => surface.recovery.set(Some((
+                        Instant::now() + Duration::from_millis(250 << attempt),
+                        attempt + 1,
+                    ))),
                 }
-                Err(error) if attempt >= 3 => {
-                    self.detach_surface();
-                    self.emit(json!({"event":"graphics_failed","message":error}));
-                }
-                Err(_) => self.recovery.set(Some((
-                    Instant::now() + Duration::from_millis(250 << attempt),
-                    attempt + 1,
-                ))),
             }
         }
         self.present(false);
+    }
+    fn present_surface(&self, id: u32, surface: &Surface) {
+        let error = {
+            // Synchronous Win32 calls may reenter the window procedure during ResizeBuffers.
+            let Ok(mut renderer) = surface.graphics.try_borrow_mut() else {
+                return;
+            };
+            let Some(renderer) = renderer.as_mut() else {
+                return;
+            };
+            renderer.frame(self.started.elapsed().as_secs_f32()).err()
+        };
+        if let Some(error) = error {
+            surface.graphics.borrow_mut().take();
+            surface.recovery.set(Some((Instant::now(), 0)));
+            self.emit(json!({"event":"graphics_lost","viewport":id,"message":error}));
+        }
     }
     pub(super) fn present(&self, resized: bool) {
         if !resized
@@ -171,18 +275,13 @@ impl Session {
         {
             return;
         }
-        let error = {
-            // A synchronous Win32/COM call may have reentered our window procedure.
-            let Ok(mut graphics) = self.graphics.try_borrow_mut() else {
-                return;
-            };
-            let Some(g) = graphics.as_mut() else { return };
-            self.last_frame.set(Instant::now());
-            g.frame(self.started.elapsed().as_secs_f32()).err()
+        self.last_frame.set(Instant::now());
+        let Ok(slots) = self.surfaces.try_borrow() else {
+            return;
         };
-        if let Some(error) = error {
-            self.reset_graphics();
-            self.emit(json!({"event":"graphics_lost","message":error}));
+        let slots = slots.clone();
+        for (id, surface) in slots {
+            self.present_surface(id, &surface);
         }
     }
 }

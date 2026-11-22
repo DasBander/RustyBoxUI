@@ -10,21 +10,19 @@ use std::{
 };
 
 const CHUNK: usize = 32 * 1024;
-const FILES: &[(&str, &[u8])] = &[
-    (
-        "relay-keyart.webp",
-        include_bytes!("../../../ui/art/signal.webp"),
-    ),
-    (
-        "transmission.wav",
-        include_bytes!("../audio/ui/breakwater.wav"),
-    ),
-    (
-        "relay-stations.json",
-        br#"{"band":"FM","stations":[88.1,95.3,103.7],"edition":"1.4"}"#,
-    ),
-];
-
+type Payloads = Vec<(&'static str, Vec<u8>)>;
+fn payloads(assets: &rustybox_assets::Assets) -> Result<Payloads, String> {
+    let read = |path: &str| {
+        assets
+            .read(path)?
+            .ok_or_else(|| format!("Missing patch payload {path}"))
+    };
+    Ok(vec![
+        ("relay-keyart.webp", read("art/signal.webp")?),
+        ("transmission.wav", read("_native/transmission.wav")?),
+        ("relay-stations.json", read("_native/relay-stations.json")?),
+    ])
+}
 #[derive(Clone, Serialize)]
 pub struct FileStatus {
     name: &'static str,
@@ -42,15 +40,15 @@ pub struct Status {
     error: Option<String>,
 }
 impl Status {
-    fn new() -> Self {
+    fn new(files: &Payloads) -> Self {
         Self {
             applied: 0,
             state: "checking",
-            total: FILES.iter().map(|f| f.1.len()).sum(),
+            total: files.iter().map(|f| f.1.len()).sum(),
             verified: 0,
-            files: FILES
+            files: files
                 .iter()
-                .map(|&(name, bytes)| FileStatus {
+                .map(|(name, bytes)| FileStatus {
                     name,
                     bytes: bytes.len(),
                     verified: 0,
@@ -90,9 +88,9 @@ fn part(root: &Path, name: &str) -> PathBuf {
     root.join(format!("{name}.part"))
 }
 
-fn scan(root: &Path, status: &mut Status) -> io::Result<()> {
+fn scan(root: &Path, status: &mut Status, files: &Payloads) -> io::Result<()> {
     fs::create_dir_all(root)?;
-    for (index, &(name, source)) in FILES.iter().enumerate() {
+    for (index, (name, source)) in files.iter().enumerate() {
         let installed = root.join(name);
         let size = source.len();
         let valid = if valid_prefix(&installed, source)? == size
@@ -126,11 +124,11 @@ fn scan(root: &Path, status: &mut Status) -> io::Result<()> {
     };
     Ok(())
 }
-fn install_chunk(root: &Path, status: &mut Status) -> io::Result<()> {
+fn install_chunk(root: &Path, status: &mut Status, files: &Payloads) -> io::Result<()> {
     let Some(index) = status.files.iter().position(|f| f.verified < f.bytes) else {
         return Ok(());
     };
-    let (name, bytes) = FILES[index];
+    let (name, bytes) = &files[index];
     let start = status.files[index].verified;
     let end = (start + CHUNK).min(bytes.len());
     let path = part(root, name);
@@ -176,13 +174,14 @@ pub struct Worker {
     thread: Option<thread::JoinHandle<()>>,
 }
 impl Worker {
-    pub fn new(root: PathBuf) -> Self {
-        let shared = Arc::new(Mutex::new(Status::new()));
+    pub fn new(root: PathBuf, assets: &rustybox_assets::Assets) -> Result<Self, String> {
+        let files = payloads(assets)?;
+        let shared = Arc::new(Mutex::new(Status::new(&files)));
         let (tx, rx) = mpsc::channel();
         let publish = shared.clone();
         let thread = thread::spawn(move || {
-            let mut status = Status::new();
-            let mut result = scan(&root, &mut status);
+            let mut status = Status::new(&files);
+            let mut result = scan(&root, &mut status, &files);
             loop {
                 if let Err(e) = result {
                     status.state = "error";
@@ -206,8 +205,8 @@ impl Worker {
                     action
                 });
                 result = match action {
-                    Some(Action::Verify) => scan(&root, &mut status),
-                    Some(Action::Start) => scan(&root, &mut status).map(|_| {
+                    Some(Action::Verify) => scan(&root, &mut status, &files),
+                    Some(Action::Start) => scan(&root, &mut status, &files).map(|_| {
                         if status.verified < status.total {
                             status.state = "running";
                         }
@@ -218,16 +217,16 @@ impl Worker {
                         }
                         Ok(())
                     }
-                    None => install_chunk(&root, &mut status),
+                    None => install_chunk(&root, &mut status, &files),
                 };
             }
         });
-        Self {
+        Ok(Self {
             status: shared,
             requested: 0,
             tx: Some(tx),
             thread: Some(thread),
-        }
+        })
     }
     pub fn read(&self) -> Status {
         let mut status = self.status.lock().unwrap().clone();

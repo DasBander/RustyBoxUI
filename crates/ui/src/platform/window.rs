@@ -6,6 +6,10 @@ use std::{ffi::c_void, rc::Rc, sync::Mutex};
 use windows::{
     Win32::{
         Foundation::*,
+        Graphics::Gdi::{
+            GetMonitorInfoW, HMONITOR, IntersectRect, MONITOR_DEFAULTTONEAREST, MONITORINFO,
+            MonitorFromRect, MonitorFromWindow,
+        },
         System::{Com::*, LibraryLoader::*},
         UI::{HiDpi::*, WindowsAndMessaging::*},
     },
@@ -30,7 +34,14 @@ impl WindowClass {
             .map_err(err)?;
             let instance = HINSTANCE(module.0);
             if *users == 0 {
+                // Branding belongs to the host executable, while the window procedure lives in this DLL.
+                let icon = GetModuleHandleW(None)
+                    .and_then(|host| {
+                        LoadIconW(Some(HINSTANCE(host.0)), windows::core::PCWSTR(1 as _))
+                    })
+                    .unwrap_or_default();
                 let class = WNDCLASSW {
+                    hIcon: icon,
                     style: CS_DBLCLKS,
                     lpfnWndProc: Some(window_proc),
                     hInstance: instance,
@@ -150,7 +161,27 @@ unsafe extern "system" fn window_proc(
             return result;
         }
         match msg {
-            WM_NCCALCSIZE => LRESULT(0),
+            WM_NCCALCSIZE => {
+                if IsZoomed(hwnd).as_bool()
+                    && (GetWindowLongPtrW(hwnd, GWL_STYLE) as u32 & WS_CHILD.0) == 0
+                {
+                    // A maximized thick frame can extend beyond the monitor by its resize border.
+                    // Keep the web client inside the work area, including on a monitor with a taskbar.
+                    let client = if wparam.0 != 0 {
+                        &mut (*(lparam.0 as *mut NCCALCSIZE_PARAMS)).rgrc[0]
+                    } else {
+                        &mut *(lparam.0 as *mut RECT)
+                    };
+                    let monitor = MonitorFromRect(client, MONITOR_DEFAULTTONEAREST);
+                    let mut visible = RECT::default();
+                    if let Some(bounds) = monitor_bounds(monitor)
+                        && IntersectRect(&mut visible, client, &bounds.rcWork).as_bool()
+                    {
+                        *client = visible;
+                    }
+                }
+                LRESULT(0)
+            }
             WM_NCHITTEST => {
                 let point = POINT {
                     x: lparam.0 as i16 as i32,
@@ -200,6 +231,22 @@ unsafe extern "system" fn window_proc(
                 }
                 LRESULT(0)
             }
+            windows::Win32::UI::WindowsAndMessaging::WM_DROPFILES => {
+                use windows::Win32::UI::Shell::{DragFinish, DragQueryFileW, HDROP};
+                let drop = HDROP(wparam.0 as *mut _);
+                let mut paths = Vec::new();
+                for index in 0..DragQueryFileW(drop, u32::MAX, None).min(256) {
+                    let length = DragQueryFileW(drop, index, None);
+                    let mut path = vec![0; length as usize + 1];
+                    let count = DragQueryFileW(drop, index, Some(&mut path));
+                    paths.push(String::from_utf16_lossy(&path[..count as usize]));
+                }
+                DragFinish(drop);
+                if let Some(session) = get(id) {
+                    session.emit(json!({"event":"files_dropped","paths":paths}));
+                }
+                LRESULT(0)
+            }
             WM_CLOSE => {
                 let _ = DestroyWindow(hwnd);
                 LRESULT(0)
@@ -214,15 +261,8 @@ unsafe extern "system" fn window_proc(
             WM_GETMINMAXINFO => {
                 let info = &mut *(lparam.0 as *mut MINMAXINFO);
                 info.ptMinTrackSize = POINT { x: 960, y: 640 };
-                use windows::Win32::Graphics::Gdi::{
-                    GetMonitorInfoW, MONITOR_DEFAULTTONEAREST, MONITORINFO, MonitorFromWindow,
-                };
                 let monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-                let mut bounds = MONITORINFO {
-                    cbSize: std::mem::size_of::<MONITORINFO>() as u32,
-                    ..Default::default()
-                };
-                if GetMonitorInfoW(monitor, &mut bounds).as_bool() {
+                if let Some(bounds) = monitor_bounds(monitor) {
                     info.ptMaxPosition = POINT {
                         x: bounds.rcWork.left - bounds.rcMonitor.left,
                         y: bounds.rcWork.top - bounds.rcMonitor.top,
@@ -251,6 +291,16 @@ unsafe extern "system" fn window_proc(
         }
     });
     result.unwrap_or(LRESULT(0))
+}
+
+fn monitor_bounds(monitor: HMONITOR) -> Option<MONITORINFO> {
+    let mut bounds = MONITORINFO {
+        cbSize: std::mem::size_of::<MONITORINFO>() as u32,
+        ..Default::default()
+    };
+    unsafe { GetMonitorInfoW(monitor, &mut bounds) }
+        .as_bool()
+        .then_some(bounds)
 }
 
 fn resize_edge(hwnd: HWND, point: POINT) -> Option<u32> {

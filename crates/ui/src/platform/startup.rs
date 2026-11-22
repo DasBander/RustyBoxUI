@@ -40,7 +40,7 @@ enum Stage {
 }
 type StageResult = Result<Stage, String>;
 struct Startup {
-    assets: PathBuf,
+    assets: crate::platform::webview::WebAssets,
     storage: Option<Storage>,
     flags: u32,
     deadline: Instant,
@@ -61,14 +61,14 @@ pub fn begin(
     data: PathBuf,
     timeout: Duration,
 ) -> Result<u64, String> {
-    if !assets.join("index.html").is_file() {
-        return Err(format!("index.html missing in {}", assets.display()));
-    }
     let deadline = Instant::now() + timeout;
-    let assets = assets.canonicalize().map_err(err)?;
+    let assets = super::webview::WebAssets::open(&assets)?;
     let mut storage = Storage::open(data.clone())?;
     let owner = window::create(config, &title)?;
     storage.set_wakeup(owner.hwnd);
+    unsafe {
+        windows::Win32::UI::Shell::DragAcceptFiles(owner.hwnd, true);
+    }
     let (sender, receiver) = mpsc::channel();
     let tx = sender.clone();
     let user_data = HSTRING::from(data.join("webview").to_string_lossy().as_ref());
@@ -180,10 +180,8 @@ impl Startup {
                     webview: RefCell::new(Some(webview)),
                     events: RefCell::new(VecDeque::new()),
                     storage: self.storage.take().ok_or("Storage closed")?,
-                    graphics: RefCell::new(None),
+                    surfaces: RefCell::new(HashMap::new()),
                     composition,
-                    geometry: Cell::new(None),
-                    recovery: Cell::new(None),
                     started: Instant::now(),
                     last_frame: Cell::new(Instant::now()),
                     graphics_path: std::env::current_exe()

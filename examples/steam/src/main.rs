@@ -41,11 +41,14 @@ fn run() -> Result<()> {
         )
         .join("RustyBoxUI/SteamLibrary"),
     };
+    let packs = rustybox_assets::Assets::open(&assets)?
+        .read("packs.json")?
+        .ok_or("Missing demo packs")?;
     let mut window = Window::new("RustyBox Library — Steam-inspired example", assets, profile)?;
     window.size = (1380, 884);
     window.hidden = std::env::args_os().any(|arg| arg == "--hidden");
     let mut library = Library {
-        packs: serde_json::from_str(include_str!("../ui/packs.json")).map_err(|e| e.to_string())?,
+        packs: serde_json::from_slice(&packs).map_err(|e| e.to_string())?,
     };
     let mut view = window.open_with_origin(AssetOrigin::Reserved)?;
     let commands = register::<Library>();

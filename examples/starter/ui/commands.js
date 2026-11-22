@@ -4,5 +4,8 @@ export function bindCommands(client) {
     greet(params, options) {
       return client.invoke('host.greet', params, options);
     },
+    openedItems(params = {}, options) {
+      return client.invoke('host.openedItems', params, options);
+    },
   };
 }

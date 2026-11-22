@@ -64,6 +64,10 @@ export class RBMenu extends HTMLElement {
     this.panel.id ||= 'rb-menu-' + ++sequence;
     this.trigger.setAttribute('aria-controls', this.panel.id);
     this.trigger.setAttribute('aria-haspopup', 'menu');
+    if (!this.panel.hasAttribute('aria-label') && !this.panel.hasAttribute('aria-labelledby')) {
+      this.trigger.id ||= 'rb-menu-trigger-' + ++sequence;
+      this.panel.setAttribute('aria-labelledby', this.trigger.id);
+    }
     this.close(false);
     this.trigger.addEventListener(
       'click',
@@ -139,6 +143,7 @@ export class RBMenu extends HTMLElement {
     return [...this.panel.querySelectorAll('[role^="menuitem"]:not(:disabled)')];
   }
   open(target) {
+    for (const item of this.panel.querySelectorAll('[role^="menuitem"]')) item.tabIndex = -1;
     this.panel.hidden = false;
     this.trigger.setAttribute('aria-expanded', 'true');
     (target || this.panel.querySelector('[aria-checked="true"]') || this.items()[0])?.focus();

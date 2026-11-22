@@ -5,12 +5,22 @@
     },
     "Message": {
       "text": "string"
-    }
+    },
+    "OpenedItem": {
+      "title": "string",
+      "text": "string",
+      "url": "string"
+    },
+    "Empty": {}
   },
   "commands": {
     "greet": {
       "input": "Greeting",
       "output": "Message"
+    },
+    "openedItems": {
+      "input": "Empty",
+      "output": "OpenedItem[]"
     }
   }
 }

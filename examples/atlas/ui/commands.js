@@ -10,5 +10,17 @@ export function bindCommands(client) {
     importImage(params = {}, options) {
       return client.invoke('host.importImage', params, options);
     },
+    workspace(params = {}, options) {
+      return client.invoke('host.workspace', params, options);
+    },
+    page(params, options) {
+      return client.invoke('host.page', params, options);
+    },
+    thumbnails(params, options) {
+      return client.invoke('host.thumbnails', params, options);
+    },
+    renderAsset(params, options) {
+      return client.invoke('host.renderAsset', params, options);
+    },
   };
 }

@@ -1,0 +1,89 @@
+rb-table,
+rb-tree {
+  display: block;
+  overflow: auto;
+  color: var(--rb-text, inherit);
+  font: inherit;
+  min-height: 0;
+}
+rb-table:focus-visible,
+rb-tree:focus-visible,
+rb-split:focus-visible {
+  outline: 2px solid var(--rb-focus, #53bfff);
+  outline-offset: -2px;
+}
+.rb-table-head,
+.rb-table-row {
+  display: grid;
+  grid-template-columns: var(--rb-columns);
+  align-items: center;
+  height: var(--rb-row-height, max(36px, 2.3em));
+  box-sizing: border-box;
+}
+.rb-table-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--rb-panel, #25282f);
+  font-weight: 650;
+}
+.rb-table-body {
+  position: relative;
+}
+.rb-table-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+.rb-table-head > span,
+.rb-table-row > span {
+  padding-inline: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+rb-table [aria-selected='true'],
+rb-tree [aria-selected='true'] {
+  background: var(--rb-selected, #254767);
+  color: var(--rb-selected-text, #fff);
+}
+rb-tree [role='treeitem'] {
+  padding: 5px 8px;
+  cursor: default;
+}
+rb-tree [aria-expanded='false']::before {
+  content: '▸ ';
+}
+rb-tree [aria-expanded='true']::before {
+  content: '▾ ';
+}
+rb-split {
+  display: block;
+  touch-action: none;
+  cursor: col-resize;
+  background: var(--rb-separator, #46505b);
+}
+rb-split[aria-orientation='horizontal'] {
+  cursor: row-resize;
+}
+@media (forced-colors: active) {
+  :is(rb-table, rb-tree) [aria-selected='true'] {
+    outline: 1px solid Highlight;
+  }
+  rb-split {
+    background: ButtonText;
+  }
+}
+
+rb-table:focus-visible [data-active] {
+  outline: 2px solid var(--rb-focus, #53bfff);
+  outline-offset: -2px;
+}
+@media (forced-colors: active) {
+  rb-table:focus-visible [data-active],
+  rb-tree:focus-visible [aria-selected='true'],
+  rb-split:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}

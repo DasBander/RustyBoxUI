@@ -1,5 +1,8 @@
 import { rustybox as client } from './sdk/rustybox.js';
 import './sdk/titlebar.js';
+import './sdk/desktop.js';
+import { bindActions } from './sdk/actions.js';
+import { projectBrowser } from './project-browser.js';
 import { onCommittedInput } from './sdk/forms.js';
 import { icon } from './sdk/components.js';
 import { bindCommands } from './commands.js';
@@ -7,6 +10,15 @@ import { bindCommands } from './commands.js';
 const $ = (s) => document.querySelector(s);
 const commands = bindCommands(client);
 const viewport = $('rb-native-view');
+const reference = $('#reference');
+const browser = projectBrowser(commands, selectAsset, report);
+let selectionRevision = 0;
+let selecting = false;
+let workspace,
+  comparing = false,
+  projectMode = false,
+  syncing = false,
+  refreshPending = false;
 const channelMenu = $('#channels');
 const channels = {
   rgb: 'RGB channels',
@@ -37,6 +49,10 @@ function bytes(value) {
 }
 function showCatalog() {
   const filter = $('#filter').value.trim().toLowerCase();
+  if (projectMode) {
+    browser.search(filter);
+    return;
+  }
   const fragment = document.createDocumentFragment();
   for (const a of catalog.filter((a) =>
     (a.title + ' ' + a.fileName).toLowerCase().includes(filter)
@@ -82,7 +98,8 @@ function inspect(a) {
   $('#format').textContent = a.fileName.split('.').at(-1).toUpperCase().replace('JPG', 'JPEG');
   $('#credit').textContent = a.credit;
   viewport.setAttribute('aria-label', 'Texture preview of ' + a.title);
-  showCatalog();
+  if (projectMode) browser.select(a.id);
+  else showCatalog();
 }
 function fitZoom() {
   const rect = viewport.getBoundingClientRect();
@@ -109,10 +126,18 @@ async function applyView() {
   $('#motion').lastElementChild.textContent = motion ? 'Pause pan' : 'Pan preview';
 }
 async function selectAsset(id) {
-  const a = await commands.selectAsset({ id });
-  inspect(a);
-  await applyView();
-  announce(a.fileName);
+  const revision = ++selectionRevision;
+  selecting = true;
+  try {
+    const a = await commands.selectAsset({ id });
+    if (revision !== selectionRevision) return;
+    inspect(a);
+    await applyView();
+    if (comparing && revision === selectionRevision) await paintReference();
+    if (revision === selectionRevision) announce(a.fileName);
+  } finally {
+    if (revision === selectionRevision) selecting = false;
+  }
 }
 async function importAsset() {
   if (busy || !initialized) return;
@@ -124,7 +149,7 @@ async function importAsset() {
       announce('Import canceled');
       return;
     }
-    if (!catalog.some((item) => item.id === a.id)) catalog.push(a);
+    await syncWorkspace();
     $('#filter').value = '';
     inspect(a);
     await applyView();
@@ -197,7 +222,7 @@ $('#motion').addEventListener('click', () => {
 });
 document.addEventListener('keydown', (e) => {
   if (e.isComposing || e.keyCode === 229) return;
-  if (e.ctrlKey && e.key.toLowerCase() === 'o') {
+  if (e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === 'o') {
     e.preventDefault();
     importAsset().catch(report);
   }
@@ -221,14 +246,108 @@ viewport.addEventListener('native-ready', (e) => {
     update.catch(report);
   }
 });
-client.addEventListener('graphics-restored', () => applyView().catch(report));
-
+// The reference has its own device and view state. Channel and zoom changes affect the primary only.
+async function paintReference() {
+  if (!comparing || !selected) return;
+  await commands.renderAsset({ id: selected.id, viewport: 1 });
+  await client.invoke('graphics.view', { viewport: 1, zoom: 1, channel: 'rgb', motion: false });
+}
+reference.addEventListener('native-error', (e) => report(e.detail));
+reference.addEventListener('native-ready', (e) => {
+  if (e.detail.source !== 'hostTexture') paintReference().catch(report);
+});
+$('#compare').addEventListener('click', async () => {
+  try {
+    comparing = !comparing;
+    $('.stage').classList.toggle('comparing', comparing);
+    $('#compare').setAttribute('aria-pressed', String(comparing));
+    reference.hidden = !comparing;
+    reference.toggleAttribute('paused', !comparing);
+    $('#compare-split').hidden = !comparing;
+    if (comparing) {
+      await reference.sync();
+      await paintReference();
+    } else {
+      await client.invoke('graphics.detach', { viewport: 1 });
+    }
+    await viewport.sync();
+  } catch (e) {
+    report(e);
+  }
+});
+client.addEventListener('graphics-restored', (e) => {
+  const slot = e.detail?.viewport ?? 0;
+  if (slot === 1) paintReference().catch(report);
+  else if (selected)
+    commands.renderAsset({ id: selected.id, viewport: 0 }).then(applyView).catch(report);
+});
+async function syncWorkspace() {
+  refreshPending = true;
+  if (syncing) return;
+  syncing = true;
+  try {
+    while (refreshPending) {
+      refreshPending = false;
+      const revision = selectionRevision;
+      const next = await commands.workspace();
+      const reset =
+        !workspace || workspace.generation !== next.generation || catalog.length > next.count;
+      const changed = reset || catalog.length !== next.count;
+      if (reset) catalog = [];
+      if (next.role !== 'preview') {
+        while (catalog.length < next.count) {
+          const page = await commands.page({ offset: catalog.length, limit: 128 });
+          if (!page.length) break;
+          catalog.push(...page);
+        }
+      }
+      workspace = next;
+      projectMode = !!next.folder || next.count > 3;
+      document.body.classList.toggle('detached', next.role === 'preview');
+      $('.workspace-label').textContent =
+        next.role === 'preview' ? 'Detached preview' : 'Texture workspace';
+      $('h1').textContent = next.folder || 'Earth observations';
+      $('#assets').hidden = projectMode;
+      $('#project-browser').hidden = !projectMode;
+      $('#cancel').hidden = !next.running;
+      if (changed && next.role !== 'preview') {
+        if (projectMode) browser.update(catalog, reset);
+        showCatalog();
+      }
+      $('#count').textContent =
+        next.count +
+        ' assets' +
+        (next.running ? ' · Scanning…' : '') +
+        (next.skipped ? ' · ' + next.skipped + ' skipped' : '');
+      if (!selecting && revision === selectionRevision && (!selected || selected.id !== next.selected)) {
+        const a = await commands.renderAsset({ id: next.selected, viewport: 0 });
+        if (selecting || revision !== selectionRevision) continue;
+        inspect(a);
+        await applyView();
+        await paintReference();
+        announce(a.fileName);
+      }
+    }
+  } finally {
+    syncing = false;
+  }
+}
+client.addEventListener('project-updated', (e) => {
+  if (initialized)
+    syncWorkspace()
+      .then(() => {
+        if (e.detail?.message) announce(e.detail.message);
+      })
+      .catch(report);
+});
+document.addEventListener('action-error', (e) => report(e.detail));
 try {
-  viewport.client = client;
-  catalog = await commands.catalog();
+  viewport.client = reference.client = client;
   await viewport.sync();
-  await selectAsset(catalog[0].id);
+  await bindActions(client);
   initialized = true;
+  await syncWorkspace();
+  performance.mark('atlas-workspace-ready');
 } catch (e) {
   report(e);
 }

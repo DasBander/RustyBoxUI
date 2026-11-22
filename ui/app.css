@@ -306,13 +306,22 @@ main > * {
   position: relative;
   isolation: isolate;
   min-width: 0;
-  aspect-ratio: 2.23;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-height: 320px;
-  max-height: 560px;
   overflow: hidden;
   border-radius: 12px;
   background: #242125;
   container-type: inline-size;
+}
+/* Artwork sets a preferred height. Longer copy can grow the same grid cell. */
+.hero::before {
+  content: '';
+  grid-area: 1 / 1;
+  width: 100%;
+  aspect-ratio: 2.23;
+  max-height: 560px;
+  pointer-events: none;
 }
 .hero-art {
   position: absolute;
@@ -338,14 +347,16 @@ main > * {
     linear-gradient(0deg, #180d13ba, transparent 57%);
 }
 .hero-copy {
-  position: absolute;
+  grid-area: 1 / 1;
+  position: relative;
   z-index: 1;
-  inset: 0;
+  min-width: 0;
+  gap: clamp(12px, 2cqw, 24px);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
-  padding: clamp(24px, 4.5cqw, 55px);
+  padding: clamp(22px, 3.7cqw, 44px);
   color: white;
 }
 .feature-logo,
@@ -359,7 +370,7 @@ main > * {
 }
 .feature-logo {
   font-size: clamp(55px, 10.2cqw, 119px);
-  margin-block: 1.1cqw 12px;
+  margin: 0;
   text-shadow: 0 2px 16px #140c101f;
 }
 [data-game='afterlight'] :is(.feature-logo, .cover-wordmark) {
@@ -404,7 +415,7 @@ main > * {
   letter-spacing: -0.025em;
 }
 .hero-info {
-  max-width: min(64%, 395px);
+  width: min(72%, 43ch);
 }
 .hero-info p {
   font-size: clamp(15px, 1.95cqw, 21px);
@@ -416,6 +427,7 @@ main > * {
 }
 .hero-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 9px;
   align-items: center;
   margin-top: clamp(15px, 2.5cqw, 26px);
@@ -991,7 +1003,7 @@ main > * {
     width: 29px;
   }
   .hero-info {
-    max-width: 77%;
+    width: min(82%, 43ch);
   }
   .shelf {
     grid-auto-flow: column;
@@ -1017,8 +1029,10 @@ main > * {
     flex-direction: column;
   }
   .hero {
-    aspect-ratio: 1.65;
     min-height: 238px;
+  }
+  .hero::before {
+    aspect-ratio: 1.65;
   }
   .featured-rail {
     display: flex;
@@ -1122,7 +1136,7 @@ main > * {
     margin-top: 4px;
   }
   .hero-info {
-    max-width: 94%;
+    width: 100%;
   }
   .hero-info p {
     font-size: 14px;

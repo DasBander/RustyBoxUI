@@ -1,0 +1,13 @@
+[package]
+name = "rustybox-assets"
+version = "0.5.0"
+edition = "2024"
+publish = false
+license = "Apache-2.0"
+
+[dependencies]
+aes-gcm = "0.10.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tempfile = "3"
+windows = { version = "0.62.2", features = ["Win32_Foundation", "Win32_System_LibraryLoader"] }

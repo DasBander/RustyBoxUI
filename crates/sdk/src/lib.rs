@@ -1,6 +1,12 @@
 //! Public Rust host SDK. All native UI functionality is loaded from the distributed DLL.
+pub mod activation;
+mod app;
 mod commands;
+pub mod files;
+mod jobs;
+pub use app::{Action, App, Windows};
 pub use commands::Commands;
+pub use jobs::{Job, JobContext};
 
 use libloading::Library;
 pub use rustybox_core::AssetOrigin;
@@ -217,6 +223,7 @@ impl Startup {
         self.id = None;
         self.api.check(status)?;
         Ok(Some(View {
+            label: String::new(),
             api: self.api.clone(),
             id,
             buffer: Vec::new(),
@@ -239,11 +246,15 @@ impl Drop for Startup {
 }
 /// Owns the native view and keeps its DLL loaded until the handle is destroyed.
 pub struct View {
+    label: String,
     api: Rc<Api>,
     id: u64,
     buffer: Vec<u8>,
 }
 impl View {
+    pub fn label(&self) -> &str {
+        &self.label
+    }
     pub fn hwnd(&self) -> HWND {
         HWND(unsafe { (self.api.hwnd)(self.id) } as *mut _)
     }
@@ -260,6 +271,41 @@ impl View {
                 texture.map_or(std::ptr::null_mut(), Interface::as_raw),
             )
         })?;
+        Ok(())
+    }
+    pub fn device_at(&self, viewport: u32) -> Result<ID3D11Device> {
+        if viewport == 0 {
+            return self.device();
+        }
+        unsafe {
+            type Get = unsafe extern "C" fn(u64, u32, *mut *mut c_void) -> i32;
+            let call = self
+                .api
+                ._lib
+                .get::<Get>(b"rb_graphics_device_at\0")
+                .map_err(|e| e.to_string())?;
+            let mut raw = std::ptr::null_mut();
+            self.api.check(call(self.id, viewport, &mut raw))?;
+            Ok(ID3D11Device::from_raw(raw))
+        }
+    }
+    pub fn set_texture_at(&self, viewport: u32, texture: Option<&ID3D11Texture2D>) -> Result<()> {
+        if viewport == 0 {
+            return self.set_texture(texture);
+        }
+        unsafe {
+            type Set = unsafe extern "C" fn(u64, u32, *mut c_void) -> i32;
+            let call = self
+                .api
+                ._lib
+                .get::<Set>(b"rb_graphics_texture_at\0")
+                .map_err(|e| e.to_string())?;
+            self.api.check(call(
+                self.id,
+                viewport,
+                texture.map_or(std::ptr::null_mut(), Interface::as_raw),
+            ))?;
+        }
         Ok(())
     }
     pub fn reset_graphics(&self) -> Result<()> {

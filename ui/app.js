@@ -2,7 +2,7 @@ import { rustybox, createPreviewClient } from './sdk/rustybox.js';
 import './sdk/titlebar.js';
 import { games } from './catalog.js';
 import { onCommittedInput } from './sdk/forms.js';
-import { icon, escapeHTML as esc } from './sdk/components.js';
+import { icon, escapeHTML as esc, gameWordmark } from './sdk/components.js';
 import { heading, featuredHero, empty, gameDetails, nativeLabPage } from './storefront/views.js';
 import { defaultProfile, validState, writeProfile } from './storefront/profile.js';
 
@@ -211,9 +211,7 @@ function library() {
         return /* HTML */ `<article class="library-card" data-game="${g.id}">
           <div class="library-cover">
             <img src="${g.art}" alt="" />
-            <div class="cover-wordmark" aria-hidden="true">
-              ${esc(g.wordmark)}${g.subtitle ? `<small>${esc(g.subtitle)}</small>` : ''}
-            </div>
+            <div class="cover-wordmark" aria-hidden="true">${gameWordmark(g)}</div>
             <button
               class="cover-open"
               data-open="${g.id}"
@@ -403,7 +401,7 @@ function settings() {
       <section class="runtime-card">
         <h2>About RustyBox</h2>
         <div class="runtime-row">
-          <span>Version</span><strong>${esc(runtime?.version || '0.3.6')}</strong>
+          <span>Version</span><strong>${esc(runtime?.version || '0.5.0')}</strong>
         </div>
         <div class="runtime-row">
           <span>Runtime</span><strong>${client.isNative ? 'WebView2' : 'Browser preview'}</strong>

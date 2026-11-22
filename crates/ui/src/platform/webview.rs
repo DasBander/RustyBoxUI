@@ -10,10 +10,22 @@ use webview2_com::{
 };
 use windows::core::{HSTRING, Interface, PWSTR};
 
+pub(super) enum WebAssets {
+    Directory(std::path::PathBuf),
+    Packed(Rc<rustybox_assets::Package>),
+}
+impl WebAssets {
+    pub(super) fn open(path: &std::path::Path) -> Result<Self, String> {
+        Ok(match rustybox_assets::Assets::open(path)? {
+            rustybox_assets::Assets::Directory(root) => Self::Directory(root),
+            rustybox_assets::Assets::Packed(pack) => Self::Packed(Rc::new(pack)),
+        })
+    }
+}
 impl Session {
     pub(super) unsafe fn configure(
         self: &Rc<Self>,
-        assets: &std::path::Path,
+        assets: &WebAssets,
         flags: u32,
     ) -> Result<(), String> {
         unsafe {
@@ -41,17 +53,24 @@ impl Session {
             })
             .map_err(err)?;
             let origin = self.origin;
-            let mapped: ICoreWebView2_3 = web.cast().map_err(err)?;
-            // Windows extended-length paths are valid for Rust FS but not WebView2 folder mapping.
-            let path = assets.to_string_lossy();
-            let path = path.strip_prefix("\\\\?\\").unwrap_or(&path);
-            mapped
-                .SetVirtualHostNameToFolderMapping(
-                    &HSTRING::from(origin.host()),
-                    &HSTRING::from(path),
-                    COREWEBVIEW2_HOST_RESOURCE_ACCESS_KIND_DENY_CORS,
-                )
-                .map_err(err)?;
+            match assets {
+                WebAssets::Packed(package) => {
+                    super::resources::mount(&web, origin, package.clone()).map_err(err)?
+                }
+                WebAssets::Directory(assets) => {
+                    let mapped: ICoreWebView2_3 = web.cast().map_err(err)?;
+                    // Windows extended-length paths are valid for Rust FS but not WebView2 folder mapping.
+                    let path = assets.to_string_lossy();
+                    let path = path.strip_prefix("\\\\?\\").unwrap_or(&path);
+                    mapped
+                        .SetVirtualHostNameToFolderMapping(
+                            &HSTRING::from(origin.host()),
+                            &HSTRING::from(path),
+                            COREWEBVIEW2_HOST_RESOURCE_ACCESS_KIND_DENY_CORS,
+                        )
+                        .map_err(err)?;
+                }
+            }
             let weak = Rc::downgrade(self);
             let mut token = 0;
             web.add_WebMessageReceived(

@@ -13,10 +13,6 @@ pub struct Frame {
     pub secondary: [f32; 4],
 }
 
-const FULLSCREEN: &str = include_str!("fullscreen.hlsl");
-pub const RACING: &str = include_str!("racing.hlsl");
-pub const MATERIAL: &str = include_str!("material.hlsl");
-
 fn compile(source: &str, entry: PCSTR, profile: PCSTR) -> Result<ID3DBlob> {
     let (mut blob, mut errors) = (None, None);
     unsafe {
@@ -63,10 +59,10 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn new(device: ID3D11Device, shader: &str) -> Result<Self> {
-        let vertex_code = compile(FULLSCREEN, s!("vertex"), s!("vs_5_0"))?;
+    pub fn new(device: ID3D11Device, fullscreen: &str, shader: &str) -> Result<Self> {
+        let vertex_code = compile(fullscreen, s!("vertex"), s!("vs_5_0"))?;
         let pixel_code = compile(
-            &format!("{FULLSCREEN}\n{shader}"),
+            &format!("{fullscreen}\n{shader}"),
             s!("pixel"),
             s!("ps_5_0"),
         )?;

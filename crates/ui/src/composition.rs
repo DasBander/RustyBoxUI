@@ -41,6 +41,25 @@ impl Composition {
             })
         }
     }
+    pub fn create_surface(&self) -> Result<IDCompositionVisual, String> {
+        unsafe {
+            let visual: IDCompositionVisual = self
+                .device
+                .CreateVisual()
+                .and_then(|v| v.cast())
+                .map_err(|e| e.to_string())?;
+            self.surface
+                .AddVisual(&visual, true, None)
+                .map_err(|e| e.to_string())?;
+            Ok(visual)
+        }
+    }
+    pub fn remove_surface(&self, visual: &IDCompositionVisual) {
+        unsafe {
+            let _ = self.surface.RemoveVisual(visual);
+        }
+        let _ = self.commit();
+    }
     pub fn commit(&self) -> Result<(), String> {
         unsafe { self.device.Commit() }.map_err(|e| e.to_string())
     }

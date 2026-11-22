@@ -34,7 +34,14 @@ function draw(s) {
   const pct = Math.floor((s.verified / s.total) * 100);
   $('#bar').value = pct;
   $('#percent').textContent = pct + '%';
-  $('#size').textContent = fmt(s.verified) + ' / ' + fmt(s.total) + ' verified';
+  const verified = fmt(s.verified);
+  const total = fmt(s.total);
+  const remaining = s.total - s.verified;
+  // A tiny pending file can round both byte counts to the same number of MiB.
+  $('#size').textContent =
+    remaining > 0 && verified === total
+      ? total + ' total · ' + fmt(remaining) + ' remaining'
+      : verified + ' / ' + total + ' verified';
   $('#action').textContent =
     {
       running: 'Pause update',

@@ -1,5 +1,5 @@
 param(
-    [string]$Destination = (Join-Path $env:LOCALAPPDATA 'Programs\RustyBoxUI\0.3.6'),
+    [string]$Destination = (Join-Path $env:LOCALAPPDATA 'Programs\RustyBoxUI\0.5.0'),
     [switch]$CheckOnly,
     [string]$RuntimeInstaller
 )
@@ -11,9 +11,12 @@ if (-not [Environment]::Is64BitOperatingSystem -or $env:PROCESSOR_ARCHITECTURE -
     throw 'Use 64-bit PowerShell on Windows x64.'
 }
 $assetFolders = @('ui', 'atlas-ui', 'starter-ui', 'steam-ui') + @($showcaseApps | ForEach-Object { "$_-ui" })
+$sdkRoot = $source
+$source = Join-Path $source "runtime"
+$assetsToInstall = @($assetFolders | ForEach-Object { "$_.rbpak" })
 $hostsToInstall = $rustHosts + 'rustybox-cpp-host.exe'
-$requiredFiles = @('LICENSE', 'steam-ui\catalog.js', 'licenses\DEPENDENCIES.txt') + $runtimeDlls + $hostsToInstall
-$requiredFiles += @($assetFolders | ForEach-Object { "$_\index.html" })
+$requiredFiles = @('LICENSE', 'licenses\DEPENDENCIES.txt') + $runtimeDlls + $hostsToInstall
+$requiredFiles += $assetsToInstall
 foreach ($file in $requiredFiles) {
     if (-not (Test-Path -LiteralPath (Join-Path $source $file) -PathType Leaf)) {
         throw "Incomplete SDK bundle: $file"
@@ -22,7 +25,7 @@ foreach ($file in $requiredFiles) {
 if (-not $CheckOnly) {
     $destination = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Destination).TrimEnd('\')
     $parent = Split-Path -Parent $destination
-    if (-not $parent -or $destination.StartsWith($source.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase) -or $destination -eq $source) {
+    if (-not $parent -or $destination.StartsWith($sdkRoot.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase) -or $destination -eq $sdkRoot) {
         throw 'Choose an installation directory outside the extracted SDK.'
     }
     if (Test-Path -LiteralPath $destination) {
@@ -76,7 +79,7 @@ New-Item -ItemType Directory -Force -Path $parent | Out-Null
 $staging = Join-Path $parent ('rustybox-install-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $staging | Out-Null
 try {
-    $installedFiles = @('LICENSE', 'licenses') + $runtimeDlls + $hostsToInstall + $assetFolders
+    $installedFiles = @('LICENSE', 'licenses') + $runtimeDlls + $hostsToInstall + $assetsToInstall
     foreach ($file in $installedFiles) {
         Copy-Item -LiteralPath (Join-Path $source $file) -Destination $staging -Recurse
     }

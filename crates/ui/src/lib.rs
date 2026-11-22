@@ -177,6 +177,17 @@ pub extern "C" fn rb_wait(id: u64, maximum_ms: u32) -> i32 {
 /// out receives a retained ID3D11Device pointer. Release it on the view thread.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn rb_graphics_device(id: u64, out: *mut *mut c_void) -> i32 {
+    unsafe { rb_graphics_device_at(id, 0, out) }
+}
+/// Obtain an owning device reference for one DOM viewport.
+/// # Safety
+/// The output must point to writable storage for a COM interface pointer.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn rb_graphics_device_at(
+    id: u64,
+    viewport: u32,
+    out: *mut *mut c_void,
+) -> i32 {
     if out.is_null() {
         return INVALID_ARGUMENT;
     }
@@ -187,12 +198,7 @@ pub unsafe extern "C" fn rb_graphics_device(id: u64, out: *mut *mut c_void) -> i
         let Some(session) = platform::get(id) else {
             return Ok(INVALID_HANDLE);
         };
-        session
-            .graphics
-            .borrow()
-            .as_ref()
-            .ok_or("Attach the graphics viewport first")?
-            .device(out)?;
+        session.with_graphics(viewport, |g| g.device(out))?;
         Ok(OK)
     })
 }
@@ -200,16 +206,22 @@ pub unsafe extern "C" fn rb_graphics_device(id: u64, out: *mut *mut c_void) -> i
 /// texture is a valid ID3D11Texture2D or null. The runtime holds an independent reference after success.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn rb_graphics_texture(id: u64, texture: *mut c_void) -> i32 {
+    unsafe { rb_graphics_texture_at(id, 0, texture) }
+}
+/// Set a texture created on the selected viewport's device.
+/// # Safety
+/// The texture must be a valid borrowed ID3D11Texture2D or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn rb_graphics_texture_at(
+    id: u64,
+    viewport: u32,
+    texture: *mut c_void,
+) -> i32 {
     guard(|| {
         let Some(session) = platform::get(id) else {
             return Ok(INVALID_HANDLE);
         };
-        session
-            .graphics
-            .borrow_mut()
-            .as_mut()
-            .ok_or("Attach the graphics viewport first")?
-            .texture(texture)?;
+        session.with_graphics(viewport, |g| g.texture(texture))?;
         Ok(OK)
     })
 }

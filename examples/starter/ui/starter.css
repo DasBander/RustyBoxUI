@@ -33,3 +33,23 @@ output {
   display: block;
   margin-top: 20px;
 }
+
+#opened {
+  margin-block-start: 2rem;
+}
+#opened h2 {
+  font-size: 1.125rem;
+}
+#items article {
+  border-top: 1px solid var(--border);
+  padding-block: 0.6rem;
+}
+#items h3 {
+  font-size: 1rem;
+  margin: 0;
+}
+#items p {
+  margin: 0.4rem 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

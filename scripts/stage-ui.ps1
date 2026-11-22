@@ -25,6 +25,17 @@ if ($appDirectory.Parent.Name -eq 'showcase') {
     foreach ($file in $displayType) {
         Copy-Item -LiteralPath (Join-Path $root "ui\art\type\$file") -Destination $typeDir -Force
     }
+    if ($appDirectory.Name -in 'racing','material','patcher') {
+        $native = New-Item -ItemType Directory -Force -Path (Join-Path $Destination '_native')
+        if ($appDirectory.Name -eq 'patcher') {
+            Copy-Item -LiteralPath (Join-Path $appDirectory.Parent.FullName 'audio\ui\breakwater.wav') -Destination (Join-Path $native.FullName 'transmission.wav') -Force
+            Copy-Item -LiteralPath (Join-Path $App 'relay-stations.json') -Destination $native.FullName -Force
+        } else {
+            foreach ($shader in 'fullscreen.hlsl',($appDirectory.Name + '.hlsl')) {
+                Copy-Item -LiteralPath (Join-Path $appDirectory.Parent.FullName "src\$shader") -Destination $native.FullName -Force
+            }
+        }
+    }
     if ($appDirectory.Name -eq 'patcher') {
         $artDir = Join-Path $Destination 'art'
         New-Item -ItemType Directory -Path $artDir -Force | Out-Null
