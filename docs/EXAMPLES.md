@@ -8,6 +8,7 @@ Run `.\scripts\build.ps1` once from a source checkout. Choose a command below, o
 | [Storefront](../ui/index.html) | `.\scripts\run.ps1` | `rustybox-launcher.exe` | Browse seven fictional games, save one to the wishlist, install a demo or open the graphics lab. |
 | [Steam-inspired library](../examples/steam/src/main.rs) | `.\scripts\run.ps1 -Steam` | `rustybox-steam.exe` | Install a radio demo and tune three channels. Collections, playtime and achievements persist. |
 | [Atlas](../examples/atlas/src/main.rs) | `.\scripts\run.ps1 -Atlas` | `rustybox-atlas.exe` | Open or drop an image folder, browse thumbnails as it scans, compare GPU channels, or detach the selected texture into a second window. Atlas restores the project and selection on launch. |
+| [Talus](../examples/showcase/talus/ui/game.js) | `.\scripts\run.ps1 -Example talus` | `rustybox-talus.exe` | Bank a glider through Copper Narrows, boost between gates and try to beat your time. F11 toggles fullscreen. |
 | [Nightshift](../examples/showcase/racing/ui/app.js) | `.\scripts\run.ps1 -Example racing` | `rustybox-racing.exe` | Drive one lap. W/S accelerate and brake, A/D steer and Escape pauses. |
 | [Couch Library](../examples/showcase/couch/ui/app.js) | `.\scripts\run.ps1 -Example couch` | `rustybox-couch.exe` | Use the D-pad, A/B and bumpers, or arrow keys, Enter, Escape and Q/E. Open Nightshift to launch the race. |
 | [Foundry](../examples/showcase/material/ui/app.js) | `.\scripts\run.ps1 -Example material` | `rustybox-material.exe` | Drag or use the arrow keys to orbit the sphere. Change roughness and metalness or choose a preset. |
@@ -16,6 +17,22 @@ Run `.\scripts\build.ps1` once from a source checkout. Choose a command below, o
 | [C++ embedded host](../examples/cpp-host/main.cpp) | `.\scripts\run.ps1 -Cpp` | `rustybox-cpp-host.exe` | Run the storefront inside a Win32 window owned by C++. |
 
 Try the [starter walkthrough](GETTING_STARTED.md) for a first project. For an app with a GPU viewport, follow [the D3D11 integration guide](INTEGRATION.md#show-a-direct3d-11-texture).
+
+## Fly Copper Narrows
+
+Open `rustybox-talus.exe` in the apps bundle, or run `npm run preview:talus` from the checkout or extracted SDK and visit the loopback URL printed in the terminal. The game runs offline once the local files are available.
+
+| Windowed main menu | Fullscreen flight |
+| --- | --- |
+| [![Talus main menu overlooking Copper Narrows at sunset](images/talus-menu.jpg)](images/talus-menu.jpg) | [![Fullscreen flight with the glider and gameplay HUD above the river](images/talus-flight.jpg)](images/talus-flight.jpg) |
+
+Select **Start flight** to begin the countdown. The glider moves forward automatically. Bank with **A/D** or **Left/Right**, climb with **W/Up** and descend with **S/Down**. You can also drag on the scene to steer. Hold **Space** or the on-screen **Boost** button for extra speed. Release it to recharge. Clearing a gate restores a little boost. [Banking toward the second gate at 307 km/h](images/talus-bank.jpg)
+
+Nine gates mark the 2.22 km course. A missed gate adds four seconds and terrain contact adds two. The finish screen shows the raw time, penalties, gates cleared and final time. The game saves your best time, sound volume, render quality and vertical-control preference in the app profile or browser storage.
+
+**P** or **Escape** pauses the flight. Losing focus also pauses it. Resume, open settings, restart or return to the menu from the pause screen. The **Fullscreen** button, the display setting and **F11** switch display modes. Fullscreen hides the title bar and all window controls. Press **F11** again or choose **Settings → Exit fullscreen** to return. The Windows host restores the previous window placement.
+
+The Rust host opens the local UI. WebGL draws the terrain, glider and gates, and Web Audio synthesizes wind and timing cues. The example has no JavaScript build step or CDN dependencies. [Game source](../examples/showcase/talus/ui) · [Fullscreen integration](INTEGRATION.md#fullscreen-windows)
 
 ## Gallery
 
@@ -49,7 +66,7 @@ At **3833 × 2097**, Relay caps the artwork size and places the installation pro
 
 ## Where to look in the source
 
-The storefront, Steam library and Couch Library share the [game catalog](../ui/catalog.js). The five standalone showcases share their [window controls and color roles](../examples/showcase/common/chrome.css). Each app supplies its own HTML, styles and behavior. Foundry and Nightshift render their scenes in Rust and HLSL. [Showcase host](../examples/showcase/src/lib.rs) · [Native scene rendering](../examples/showcase/src/scene.rs)
+The storefront, Steam library and Couch Library share a game catalog. Couch Library, Foundry, Nightshift, Relay and Splice Room share window controls and color roles. Foundry and Nightshift render their scenes in Rust and HLSL. Talus renders its canyon in WebGL. [Game catalog](../ui/catalog.js) · [Shared window styling](../examples/showcase/common/chrome.css) · [Showcase host](../examples/showcase/src/lib.rs) · [Native scene rendering](../examples/showcase/src/scene.rs) · [Talus renderer](../examples/showcase/talus/ui/renderer.js)
 
 Each standalone showcase has its own profile under `%LOCALAPPDATA%\RustyBoxUI`. Relay writes its three-file demo under `patcher\Relay-1.4` in that directory. Splice Room opens audio files read-only.
 

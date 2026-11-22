@@ -1,4 +1,4 @@
-$showcaseApps = @('racing', 'couch', 'material', 'patcher', 'audio')
+$showcaseApps = @('racing', 'couch', 'material', 'patcher', 'audio', 'talus')
 $showcaseHosts = @($showcaseApps | ForEach-Object { "rustybox-$_.exe" })
 $rustHosts = @(
     'rustybox-launcher.exe'

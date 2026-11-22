@@ -94,4 +94,4 @@ Opening the portable ZIP shows the encrypted package. A person who controls a ru
 
 ## Package the framework examples
 
-From the framework checkout, run `.\scripts\package.ps1`. A previously built checkout can use `-SkipBuild`. The **apps ZIP** contains ten sealed applications and their required runtime files. The **SDK ZIP** also contains editable examples, headers, tooling and documentation for developers. The two launcher hosts share one storefront package. Asset credits and license notices remain readable in both distributions.
+From the framework checkout, run `.\scripts\package.ps1`. A previously built checkout can use `-SkipBuild`. The **apps ZIP** contains eleven sealed applications and their required runtime files. The **SDK ZIP** also contains editable examples, headers, tooling and documentation for developers. The two launcher hosts share one storefront package. Asset credits and license notices remain readable in both distributions.

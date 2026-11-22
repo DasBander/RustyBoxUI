@@ -86,12 +86,24 @@ export function createPreviewClient() {
       if (method === 'runtime.info')
         return {
           name: 'RustyBoxUI',
-          version: '0.6.0',
+          version: '0.7.0',
           engine: 'Browser preview',
           platform: 'browser',
           graphicsAvailable: false,
           abi: 1,
         };
+      if (method === 'window.fullscreen') {
+        if ('enabled' in params) {
+          if (typeof params.enabled !== 'boolean') throw new TypeError('enabled must be a boolean');
+          if (params.enabled && !document.fullscreenElement)
+            await document.documentElement.requestFullscreen();
+          if (!params.enabled && document.fullscreenElement) await document.exitFullscreen();
+        }
+        return {
+          supported: Boolean(document.fullscreenEnabled),
+          enabled: Boolean(document.fullscreenElement),
+        };
+      }
       if (method === 'diagnostics.echo') return params;
       if (method === 'storage.get')
         return JSON.parse(localStorage.getItem(`rustybox.${params.key}`) || 'null');

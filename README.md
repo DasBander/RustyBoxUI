@@ -1,8 +1,8 @@
 # RustyBoxUI
 
-RustyBoxUI is a Windows x64 framework for building desktop apps with Rust, HTML, CSS and JavaScript. The current developer preview is **0.6.0**. One DLL hosts WebView2 and connects the page to native commands. A second DLL lets a Rust or C++ host put a Direct3D 11 texture behind HTML controls in the same window.
+RustyBoxUI is a Windows x64 framework for building desktop apps with Rust, HTML, CSS and JavaScript. The current developer preview is **0.7.0**. One DLL hosts WebView2 and connects the page to native commands. A second DLL lets a Rust or C++ host put a Direct3D 11 texture behind HTML controls in the same window.
 
-Release builds stream HTML, scripts and game data from encrypted resources. Ship one `.rbpak` or split large payloads into part files. [Packaging resources](#packaging-resources)
+Release builds stream HTML, scripts and game data from encrypted resources. Ship one `.rbpak` or split large payloads into part files. [Packaging resources](#packaging-resources) · [Play the Talus flight game](#talus)
 
 [![The Last Signal in a 1560 × 618 storefront window, with View game and Wishlist visible beneath the description](docs/images/storefront-short.jpg)](docs/images/storefront-short.jpg)
 
@@ -90,11 +90,25 @@ Run `cargo rustybox build` to get `out/Northstar Studio.exe` alongside its DLLs 
 
 ## Examples
 
+### Talus
+
+Fly a hang glider through nine gates along the river in Copper Narrows. The 2.22 km WebGL time trial adds four seconds for each missed gate and saves your personal best. Steer with the arrow keys, hold **Space** to boost and press **F11** for a fullscreen view with the window controls hidden.
+
+Launch the Windows game with `.\scripts\run.ps1 -Example talus` after building the checkout. To play in a browser, run `npm run preview:talus` from the repository root and open the local URL it prints. [Controls and scoring](docs/EXAMPLES.md#fly-copper-narrows) · [Game source](examples/showcase/talus/ui)
+
+[![The glider banks left toward the second gate at 307 km/h in fullscreen](docs/images/talus-bank.jpg)](docs/images/talus-bank.jpg)
+
+| Windowed main menu | Approaching the first gate |
+| --- | --- |
+| [![Talus main menu with Start flight and the Copper Narrows course details](docs/images/talus-menu.jpg)](docs/images/talus-menu.jpg) | [![A glider lines up with the first timing gate above the river in Copper Narrows](docs/images/talus-flight.jpg)](docs/images/talus-flight.jpg) |
+
+### More examples
+
 | Steam-inspired game library | Foundry material editor |
 | --- | --- |
 | [![Library home with game collections and offline radio demos](docs/images/steam-home.jpg)](docs/images/steam-home.jpg) | [![Foundry showing a copper sphere in D3D11 beside HTML material controls](docs/images/material.jpg)](docs/images/material.jpg) |
 
-The repository also includes a controller-operated library, a playable race, a patcher that can resume an install, a WAV editor, a satellite texture inspector and a C++ embedding example. The gallery shows how the storefront fits short windows and how Relay arranges its installation controls at 4K. [All ten examples and launch commands](docs/EXAMPLES.md) · [Window sizes and screenshots](docs/EXAMPLES.md#window-sizes)
+The repository also includes a controller-operated library, a playable race, a patcher that can resume an install, a WAV editor, a satellite texture inspector and a C++ embedding example. The gallery shows how the storefront fits short windows and how Relay arranges its installation controls at 4K. [All eleven examples and launch commands](docs/EXAMPLES.md) · [Window sizes and screenshots](docs/EXAMPLES.md#window-sizes)
 
 Atlas is a folder-based image browser built with the same SDK. The tree and virtualized table show thumbnails while a Rust worker scans. Select a texture to compare channels in two GPU viewports or open a separate preview window.
 
@@ -104,7 +118,7 @@ Atlas is a folder-based image browser built with the same SDK. The tree and virt
 
 The Rust SDK loads the native DLL through a small C ABI. The browser and native event loop share one UI thread, while a worker persists settings off that thread. The app loop shares state across native windows. Each window can host multiple D3D11 viewports with independent textures and display settings. Maximized windows fit the current monitor’s work area, including on mixed-DPI desktops. [Runtime architecture and source map](docs/ARCHITECTURE.md) · [Public C header](include/rustybox.h)
 
-Run `.\scripts\package.ps1` from the source checkout to create two archives in `dist/`. The SDK contains the CLI, headers, editable examples and docs. The apps ZIP contains all ten runnable examples, two runtime DLLs and nine sealed asset packages. To distribute your own app, run `cargo rustybox package` in its project directory. [Asset protection and signing](docs/PACKAGING.md) · [Archive names and contents](docs/GETTING_STARTED.md#package-the-framework)
+Run `.\scripts\package.ps1` from the source checkout to create two archives in `dist/`. The SDK contains the CLI, headers, editable examples and docs. The apps ZIP contains all eleven runnable examples, two runtime DLLs and ten sealed asset packages. To distribute your own app, run `cargo rustybox package` in its project directory. [Asset protection and signing](docs/PACKAGING.md) · [Archive names and contents](docs/GETTING_STARTED.md#package-the-framework)
 
 ## Desktop integration
 
@@ -116,4 +130,4 @@ Run `.\scripts\package.ps1` from the source checkout to create two archives in `
 
 ## License and credits
 
-The framework and original example code use the [Apache License 2.0](LICENSE). Bundled fonts, photographs, film artwork and software dependencies have their own terms. [Storefront artwork and fonts](ui/art/CREDITS.md) · [Showcase fonts](examples/showcase/common/fonts) · [Racing typeface](examples/showcase/racing/ui/fonts) · [Atlas imagery](examples/atlas/ui/plates/CREDITS.md) · [Radio guide photograph](examples/steam/ui/media/CREDITS.md) · [Third-party software notices](licenses/README.md)
+The framework and original example code use the [Apache License 2.0](LICENSE). Bundled fonts, photographs, film artwork and software dependencies have their own terms. [Storefront artwork and fonts](ui/art/CREDITS.md) · [Showcase fonts](examples/showcase/common/fonts) · [Talus artwork and fonts](examples/showcase/talus/ui/CREDITS.md) · [Racing typeface](examples/showcase/racing/ui/fonts) · [Atlas imagery](examples/atlas/ui/plates/CREDITS.md) · [Radio guide photograph](examples/steam/ui/media/CREDITS.md) · [Third-party software notices](licenses/README.md)

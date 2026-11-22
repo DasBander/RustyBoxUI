@@ -25,6 +25,12 @@ if ($appDirectory.Parent.Name -eq 'showcase') {
     foreach ($file in $displayType) {
         Copy-Item -LiteralPath (Join-Path $root "ui\art\type\$file") -Destination $typeDir -Force
     }
+    if ($appDirectory.Name -eq 'talus') {
+        $type = New-Item -ItemType Directory -Force -Path (Join-Path $Destination 'art\type')
+        foreach ($name in 'barlow-condensed-800-italic.woff2', 'Barlow-Condensed-OFL.txt') {
+            Copy-Item -LiteralPath (Join-Path $root "ui\art\type\$name") -Destination $type.FullName
+        }
+    }
     if ($appDirectory.Name -in 'racing','material','patcher') {
         $native = New-Item -ItemType Directory -Force -Path (Join-Path $Destination '_native')
         if ($appDirectory.Name -eq 'patcher') {

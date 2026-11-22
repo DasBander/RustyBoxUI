@@ -4,7 +4,8 @@ use rustybox_core::SELF_TEST;
 use serde_json::json;
 use std::rc::Rc;
 use webview2_com::{
-    CoTaskMemPWSTR, Microsoft::Web::WebView2::Win32::*, NavigationCompletedEventHandler,
+    CoTaskMemPWSTR, ContainsFullScreenElementChangedEventHandler,
+    Microsoft::Web::WebView2::Win32::*, NavigationCompletedEventHandler,
     NavigationStartingEventHandler, NewWindowRequestedEventHandler,
     PermissionRequestedEventHandler, ProcessFailedEventHandler, WebMessageReceivedEventHandler,
 };
@@ -73,6 +74,22 @@ impl Session {
             }
             let weak = Rc::downgrade(self);
             let mut token = 0;
+            web.add_ContainsFullScreenElementChanged(
+                &ContainsFullScreenElementChangedEventHandler::create(Box::new(
+                    move |sender, _| {
+                        if let (Some(session), Some(web)) = (weak.upgrade(), sender) {
+                            let mut active = windows::core::BOOL::default();
+                            web.ContainsFullScreenElement(&mut active)?;
+                            session
+                                .request_fullscreen(&session.page_fullscreen, active.as_bool())?;
+                        }
+                        Ok(())
+                    },
+                )),
+                &mut token,
+            )
+            .map_err(err)?;
+            let weak = Rc::downgrade(self);
             web.add_WebMessageReceived(
                 &WebMessageReceivedEventHandler::create(Box::new(move |_, args| {
                     if let (Some(session), Some(args)) = (weak.upgrade(), args) {

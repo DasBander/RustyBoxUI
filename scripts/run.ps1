@@ -4,7 +4,7 @@ param(
     [switch]$Atlas,
     [switch]$Starter,
     [switch]$Steam,
-    [ValidateSet('racing', 'couch', 'material', 'patcher', 'audio')][string]$Example
+    [ValidateSet('racing', 'couch', 'material', 'patcher', 'audio', 'talus')][string]$Example
 )
 
 $ErrorActionPreference = 'Stop'

@@ -1,5 +1,6 @@
 //! Thread-affine view registry and shutdown for the Windows runtime.
 mod bridge;
+mod fullscreen;
 mod resource_stream;
 mod resources;
 mod startup;
@@ -33,6 +34,9 @@ pub struct Session {
     pub hwnd: HWND,
     origin: AssetOrigin,
     pub closed: Cell<bool>,
+    fullscreen: Cell<Option<fullscreen::Windowed>>,
+    host_fullscreen: Cell<bool>,
+    page_fullscreen: Cell<bool>,
     controller: RefCell<Option<ICoreWebView2Controller>>,
     webview: RefCell<Option<ICoreWebView2>>,
     pub events: RefCell<VecDeque<Vec<u8>>>,

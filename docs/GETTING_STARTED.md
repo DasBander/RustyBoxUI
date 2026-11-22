@@ -112,7 +112,7 @@ From the framework source checkout, run `.\scripts\package.ps1`. If you already 
 
 | Archive | After extraction |
 | --- | --- |
-| `RustyBoxUI-0.6.0-windows-x64.zip` | Open the `RustyBoxUI-0.6.0` folder for the CLI, DLLs, import libraries, C header, editable examples, screenshots and documentation. |
-| `RustyBoxUI-0.6.0-apps-windows-x64.zip` | Open `rustybox-launcher.exe` for the storefront or `rustybox-starter.exe` for the starter. Keep the executable, DLLs, `.rbpak` files and license notices together. |
+| `RustyBoxUI-0.7.0-windows-x64.zip` | Open the `RustyBoxUI-0.7.0` folder for the CLI, DLLs, import libraries, C header, editable examples, screenshots and documentation. |
+| `RustyBoxUI-0.7.0-apps-windows-x64.zip` | Open `rustybox-launcher.exe` for the storefront or `rustybox-starter.exe` for the starter. Keep the executable, DLLs, `.rbpak` files and license notices together. |
 
-For a frontend-only preview from source, run `npm run preview` for the storefront or `npm run preview:steam` for the library. Open `http://127.0.0.1:4173`. Browser previews use local storage. Use the Windows hosts to exercise native commands, window controls and Direct3D.
+For a frontend-only preview from the checkout or extracted SDK, run `npm run preview` for the storefront, `npm run preview:steam` for the library, or `npm run preview:talus` for the 3D game. Open `http://127.0.0.1:4173`. Browser previews use local storage. Use the Windows hosts to exercise native commands, window controls and Direct3D.

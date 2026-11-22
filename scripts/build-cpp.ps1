@@ -30,5 +30,5 @@ if ($Configuration -eq 'release') {
         $redist = $imports | Where-Object { $_ -match '^\s+(?:vcruntime|msvcp|msvcr\d|concrt)\S*\.dll\s*$' }
         if ($redist) { throw "$file requires an external Visual C++ runtime: $($redist -join ', ')" }
     }
-    Write-Output 'Verified static C runtime linkage for both DLLs and all ten hosts.'
+    Write-Output "Verified static C runtime linkage for both DLLs and all $($rustHosts.Count + 1) hosts."
 }

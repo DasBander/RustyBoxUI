@@ -80,12 +80,25 @@ impl Session {
                 "composition": self.composition.is_some(),
             })),
             "diagnostics.echo" => Ok(params),
+            "window.fullscreen" => {
+                let supported = self.hwnd == top;
+                if let Some(value) = params.get("enabled") {
+                    let enabled = value.as_bool().ok_or("enabled must be a boolean")?;
+                    if !supported {
+                        return Err("The embedding host owns this window".into());
+                    }
+                    self.request_fullscreen(&self.host_fullscreen, enabled)
+                        .map_err(err)?;
+                }
+                Ok(json!({ "supported": supported, "enabled": self.fullscreen.get().is_some() }))
+            }
             "window.minimize" => {
                 unsafe {
                     let _ = ShowWindow(top, SW_MINIMIZE);
                 }
                 Ok(Value::Null)
             }
+            "window.maximize" | "window.drag" if self.fullscreen.get().is_some() => Ok(Value::Null),
             "window.maximize" => {
                 unsafe {
                     let _ = ShowWindow(

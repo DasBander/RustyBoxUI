@@ -26,6 +26,12 @@ pub const RACING: App = App {
     shader: Some("racing.hlsl"),
     setup: None,
 };
+pub const TALUS: App = App {
+    key: "talus",
+    title: "Talus — Canyon Flight",
+    shader: None,
+    setup: None,
+};
 pub const MATERIAL: App = App {
     key: "material",
     title: "Foundry — Material editor",

@@ -78,6 +78,19 @@ document.querySelector('#close').addEventListener('click', () => rustybox.invoke
 
 Dragging the caption moves the native window and double-clicking toggles maximize. Buttons, links and form fields keep their normal behavior. Mark other interactive regions with `data-rb-no-drag`. For game tiles, assign an object from the catalog to the element's `.game` property and listen for `game-open` and `game-wishlist`. [Game catalog](../ui/catalog.js)
 
+## Fullscreen windows
+
+From a user gesture, query or set `window.fullscreen` on the RustyBox client. A standalone Windows view fills its current monitor, including the taskbar area, and restores its prior normal or maximized placement on exit. An embedded child view reports `supported: false` because its parent owns the top-level window.
+
+```js
+const state = await rustybox.invoke('window.fullscreen');
+if (state.supported) {
+  await rustybox.invoke('window.fullscreen', { enabled: !state.enabled });
+}
+```
+
+The browser preview client implements the same command with the document Fullscreen API. Cache the current mode and issue the setter directly in the click or key handler to preserve browser user activation. Listen for `fullscreenchange` in the browser to keep labels current when the browser exits fullscreen. The native runtime also responds when WebView2 reports that an HTML element entered fullscreen. [Talus display controls](../examples/showcase/talus/ui/game.js) · [WebView2 fullscreen events](https://learn.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/icorewebview2#add_containsfullscreenelementchanged)
+
 ## Show a Direct3D 11 texture
 
 1. Set `config.composed = true` before opening a Rust view, or add `RB_COMPOSED` to the C flags. This places HTML controls above a DirectComposition surface. The default mode places a native child HWND above the page.

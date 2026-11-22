@@ -176,6 +176,9 @@ impl Startup {
                         AssetOrigin::LegacyLocal
                     },
                     closed: Cell::new(false),
+                    fullscreen: Cell::new(None),
+                    host_fullscreen: Cell::new(false),
+                    page_fullscreen: Cell::new(false),
                     controller: RefCell::new(Some(controller)),
                     webview: RefCell::new(Some(webview)),
                     events: RefCell::new(VecDeque::new()),

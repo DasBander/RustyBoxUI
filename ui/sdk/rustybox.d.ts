@@ -26,6 +26,11 @@ export interface InvokeOptions {
 }
 export class RustyBoxClient extends EventTarget {
   readonly isNative: boolean;
+  invoke(
+    method: 'window.fullscreen',
+    params?: { enabled?: boolean },
+    options?: InvokeOptions
+  ): Promise<{ supported: boolean; enabled: boolean }>;
   invoke(method: 'runtime.info', params?: {}, options?: InvokeOptions): Promise<RuntimeInfo>;
   invoke(
     method: 'graphics.info',

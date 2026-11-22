@@ -154,15 +154,27 @@ unsafe extern "system" fn window_proc(
 ) -> LRESULT {
     let result = std::panic::catch_unwind(|| unsafe {
         let id = GetWindowLongPtrW(hwnd, GWLP_USERDATA) as u64;
-        if let Some(session) = get(id)
+        let active_session = get(id);
+        if let Some(session) = &active_session
             && let Some(comp) = &session.composition
             && let Some(result) = comp.message(hwnd, msg, wparam, lparam)
         {
             return result;
         }
+        let fullscreen = active_session
+            .as_ref()
+            .is_some_and(|session| session.fullscreen.get().is_some());
         match msg {
+            WM_NCHITTEST if fullscreen => LRESULT(HTCLIENT as isize),
+            WM_SYSCOMMAND
+                if fullscreen
+                    && matches!((wparam.0 & 0xfff0) as u32, SC_SIZE | SC_MOVE | SC_MAXIMIZE) =>
+            {
+                LRESULT(0)
+            }
             WM_NCCALCSIZE => {
-                if IsZoomed(hwnd).as_bool()
+                if !fullscreen
+                    && IsZoomed(hwnd).as_bool()
                     && (GetWindowLongPtrW(hwnd, GWL_STYLE) as u32 & WS_CHILD.0) == 0
                 {
                     // A maximized thick frame can extend beyond the monitor by its resize border.
@@ -260,17 +272,37 @@ unsafe extern "system" fn window_proc(
             }
             WM_GETMINMAXINFO => {
                 let info = &mut *(lparam.0 as *mut MINMAXINFO);
-                info.ptMinTrackSize = POINT { x: 960, y: 640 };
+                info.ptMinTrackSize = if fullscreen {
+                    POINT { x: 1, y: 1 }
+                } else {
+                    POINT { x: 960, y: 640 }
+                };
                 let monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
                 if let Some(bounds) = monitor_bounds(monitor) {
+                    let area = if fullscreen {
+                        bounds.rcMonitor
+                    } else {
+                        bounds.rcWork
+                    };
                     info.ptMaxPosition = POINT {
-                        x: bounds.rcWork.left - bounds.rcMonitor.left,
-                        y: bounds.rcWork.top - bounds.rcMonitor.top,
+                        x: area.left - bounds.rcMonitor.left,
+                        y: area.top - bounds.rcMonitor.top,
                     };
                     info.ptMaxSize = POINT {
-                        x: bounds.rcWork.right - bounds.rcWork.left,
-                        y: bounds.rcWork.bottom - bounds.rcWork.top,
+                        x: area.right - area.left,
+                        y: area.bottom - area.top,
                     };
+                }
+                LRESULT(0)
+            }
+            WM_DISPLAYCHANGE | WM_DPICHANGED if fullscreen => {
+                let monitor = if msg == WM_DPICHANGED {
+                    MonitorFromRect(lparam.0 as *const RECT, MONITOR_DEFAULTTONEAREST)
+                } else {
+                    MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST)
+                };
+                if let Some(bounds) = monitor_bounds(monitor) {
+                    let _ = super::fullscreen::fit_monitor(hwnd, bounds.rcMonitor);
                 }
                 LRESULT(0)
             }
@@ -293,7 +325,7 @@ unsafe extern "system" fn window_proc(
     result.unwrap_or(LRESULT(0))
 }
 
-fn monitor_bounds(monitor: HMONITOR) -> Option<MONITORINFO> {
+pub(super) fn monitor_bounds(monitor: HMONITOR) -> Option<MONITORINFO> {
     let mut bounds = MONITORINFO {
         cbSize: std::mem::size_of::<MONITORINFO>() as u32,
         ..Default::default()

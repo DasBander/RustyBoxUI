@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>Talus — Canyon Flight</title>
+    <link rel="stylesheet" href="game.css" />
+    <script type="module" src="game.js"></script>
+  </head>
+  <body>
+    <header class="flightbar" data-rb-drag>
+      <div class="location">
+        <i class="wingmark" aria-hidden="true"></i><span id="location">Main menu</span>
+      </div>
+      <div class="window-tools" data-rb-no-drag>
+        <button class="screen-button" data-fullscreen type="button">
+          <i class="corners" aria-hidden="true"></i><span class="screen-label">Fullscreen</span
+          ><kbd>F11</kbd>
+        </button>
+        <div id="native-controls" hidden>
+          <button data-window="minimize" aria-label="Minimize" title="Minimize">
+            <i class="min-icon"></i>
+          </button>
+          <button
+            data-window="maximize"
+            aria-label="Maximize or restore"
+            title="Maximize or restore"
+          >
+            <i class="max-icon"></i>
+          </button>
+          <button data-window="close" aria-label="Close game" title="Close game">
+            <i class="close-icon"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+    <main>
+      <section id="menu" aria-labelledby="game-title">
+        <div class="menu-body">
+          <div class="menu-content">
+            <p class="eyebrow accent"><span class="rule"></span>Canyon flight</p>
+            <h1 id="game-title">Talus</h1>
+            <p class="intro">Race the river through nine canyon gates.</p>
+            <nav class="menu-actions" aria-label="Game menu">
+              <button class="primary" id="start">
+                Start flight <span aria-hidden="true">↗</span>
+              </button>
+              <button class="text-action" id="settings">
+                Settings <span aria-hidden="true">›</span>
+              </button>
+              <button class="text-action" id="controls">
+                How to fly <span aria-hidden="true">›</span>
+              </button>
+              <button class="quiet" id="quit" hidden>Quit game</button>
+            </nav>
+          </div>
+        </div>
+        <footer class="route-strip">
+          <div class="route-name">
+            <span class="eyebrow">Course</span><strong>Copper Narrows</strong>
+          </div>
+          <canvas id="route-map" width="320" height="80" aria-hidden="true"></canvas>
+          <div class="course-distance">
+            <span class="eyebrow">Distance</span><strong>2.22 <small>km</small></strong>
+          </div>
+          <div class="record">
+            <span class="eyebrow">Personal best</span><strong id="best">Unflown</strong>
+          </div>
+        </footer>
+      </section>
+      <section id="field" hidden aria-label="Copper Narrows flight">
+        <canvas
+          id="world"
+          tabindex="0"
+          aria-label="3D glider course. Steer with the arrow keys or WASD, hold Space to boost, and press P to pause."
+        ></canvas>
+        <div class="hud-top">
+          <div class="hud-value">
+            <span class="eyebrow">Flight time</span><strong id="time">00:00.00</strong>
+          </div>
+          <div class="hud-right">
+            <div class="gate-count">
+              <span class="eyebrow">Next gate</span><b id="gates">01 / 09</b>
+            </div>
+            <button
+              id="pause"
+              class="hud-button"
+              aria-label="Pause flight"
+              title="Pause flight (P or Esc)"
+            >
+              Ⅱ
+            </button>
+          </div>
+        </div>
+        <div id="gate-label" hidden></div>
+        <output id="countdown" hidden></output>
+        <output id="feedback" role="status"></output>
+        <div class="hud-bottom">
+          <div>
+            <span class="eyebrow">Airspeed</span
+            ><strong><span id="speed">194</span> <small>km/h</small></strong>
+          </div>
+          <div class="progress-wrap">
+            <span class="eyebrow">Copper Narrows</span
+            ><progress id="distance" value="0" max="2220" aria-label="Course progress"></progress>
+          </div>
+          <button id="boost" class="boost" aria-label="Hold to boost">
+            <span>Boost <kbd>Space</kbd></span
+            ><progress id="charge" value="1" max="1" aria-label="Boost charge"></progress>
+          </button>
+        </div>
+      </section>
+    </main>
+    <dialog id="panel" aria-labelledby="panel-title">
+      <div class="panel-head">
+        <span class="eyebrow accent" id="panel-context">Talus</span
+        ><button class="dismiss" id="back" aria-label="Back" title="Back">×</button>
+      </div>
+      <h2 id="panel-title"></h2>
+      <section data-panel="paused" hidden>
+        <p>Your flight is paused.</p>
+        <div class="panel-actions">
+          <button class="primary" id="resume">
+            Resume flight <span aria-hidden="true">↗</span></button
+          ><button class="text-action" id="pause-settings">
+            Settings <span aria-hidden="true">›</span></button
+          ><button class="text-action" id="restart">
+            Restart flight <span aria-hidden="true">›</span></button
+          ><button class="quiet" data-menu>Return to menu</button>
+        </div>
+      </section>
+      <section data-panel="settings" hidden>
+        <div class="setting">
+          <label for="volume">Sound volume</label>
+          <div class="setting-control">
+            <input id="volume" type="range" min="0" max="100" step="1" /><output
+              id="volume-value"
+              for="volume"
+            ></output>
+          </div>
+        </div>
+        <div class="setting">
+          <label for="quality">Render quality</label
+          ><select id="quality">
+            <option value="balanced">Balanced</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="setting">
+          <label for="invert">Invert vertical controls</label><input type="checkbox" id="invert" />
+        </div>
+        <div class="setting">
+          <span>Display mode</span
+          ><button data-fullscreen class="option" type="button">
+            <span class="screen-label">Fullscreen</span><i class="corners"></i>
+          </button>
+        </div>
+        <button class="primary done">Done <span aria-hidden="true">↗</span></button>
+      </section>
+      <section data-panel="controls" hidden>
+        <p>Fly through each ring. A missed gate adds four seconds. Touching the canyon adds two.</p>
+        <dl class="keys">
+          <div>
+            <dt>Bank left / right</dt>
+            <dd><kbd>A</kbd><kbd>D</kbd> or <kbd>←</kbd><kbd>→</kbd></dd>
+          </div>
+          <div>
+            <dt>Climb / descend</dt>
+            <dd><kbd>W</kbd><kbd>S</kbd> or <kbd>↑</kbd><kbd>↓</kbd></dd>
+          </div>
+          <div>
+            <dt>Hold to boost</dt>
+            <dd><kbd>Space</kbd></dd>
+          </div>
+          <div>
+            <dt>Pause</dt>
+            <dd><kbd>P</kbd> or <kbd>Esc</kbd></dd>
+          </div>
+          <div>
+            <dt>Fullscreen</dt>
+            <dd><kbd>F11</kbd></dd>
+          </div>
+        </dl>
+        <p class="hint">
+          With a mouse or touchscreen, drag on the canyon to steer. Release to level out.
+        </p>
+        <button class="primary done">Got it <span aria-hidden="true">↗</span></button>
+      </section>
+      <section data-panel="results" hidden>
+        <output id="result-time"></output>
+        <p id="result-note" role="status"></p>
+        <dl class="keys">
+          <div>
+            <dt>Flight time</dt>
+            <dd id="raw-time"></dd>
+          </div>
+          <div>
+            <dt>Gates cleared</dt>
+            <dd id="cleared"></dd>
+          </div>
+          <div>
+            <dt>Penalties</dt>
+            <dd id="penalty"></dd>
+          </div>
+        </dl>
+        <div class="panel-actions">
+          <button class="primary" id="again">Fly again <span aria-hidden="true">↗</span></button
+          ><button class="quiet" data-menu>Return to menu</button>
+        </div>
+      </section>
+    </dialog>
+    <p id="notice" role="alert" hidden></p>
+  </body>
+</html>
