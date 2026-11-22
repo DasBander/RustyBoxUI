@@ -25,7 +25,7 @@ try {
         Copy-Item -LiteralPath ui -Destination (Join-Path $stage.FullName 'starter-ui') -Recurse
         $out = Join-Path $targetRoot 'live'
     } else {
-        & .\tools\cargo-rustybox.exe seal ui (Join-Path $stage.FullName 'starter-ui.rbpak') $exe
+        & .\tools\cargo-rustybox.exe seal --manifest rustybox.json ui (Join-Path $stage.FullName 'starter-ui.rbpak') $exe
         if ($LASTEXITCODE) {throw 'Asset packaging failed'}
         # Font licenses stay readable in redistributable apps.
         $assetNotices=New-Item -ItemType Directory -Path (Join-Path $stage.FullName 'licenses\assets') -Force

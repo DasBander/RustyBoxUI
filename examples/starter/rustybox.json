@@ -7,5 +7,6 @@
   "publisherDisplayName": "RustyBox",
   "fileTypes": [".rbnote"],
   "protocols": ["rustybox-note"],
-  "version": "0.5.0.0"
+  "resources": { "chunkSizeKiB": 1024 },
+  "version": "0.6.0.0"
 }

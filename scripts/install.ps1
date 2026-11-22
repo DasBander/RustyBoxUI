@@ -1,5 +1,5 @@
 param(
-    [string]$Destination = (Join-Path $env:LOCALAPPDATA 'Programs\RustyBoxUI\0.5.0'),
+    [string]$Destination = (Join-Path $env:LOCALAPPDATA 'Programs\RustyBoxUI\0.6.0'),
     [switch]$CheckOnly,
     [string]$RuntimeInstaller
 )
@@ -80,6 +80,9 @@ $staging = Join-Path $parent ('rustybox-install-' + [guid]::NewGuid().ToString('
 New-Item -ItemType Directory -Path $staging | Out-Null
 try {
     $installedFiles = @('LICENSE', 'licenses') + $runtimeDlls + $hostsToInstall + $assetsToInstall
+    $installedFiles += @(Get-ChildItem -LiteralPath $source -Directory | Where-Object {
+        $_.Name -match '^(.+\.rbpak)\.chunks-[0-9a-f]{24}$' -and $assetsToInstall -contains $Matches[1]
+    } | ForEach-Object Name)
     foreach ($file in $installedFiles) {
         Copy-Item -LiteralPath (Join-Path $source $file) -Destination $staging -Recurse
     }

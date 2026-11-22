@@ -84,7 +84,7 @@ checksum = "8f1fe948ff07f4bd06c30984e69f5b4899c516a3ef74f34df92a2df2ab535495"
 
 [[package]]
 name = "cargo-rustybox"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "rustybox-assets",
  "rustybox-build",
@@ -488,7 +488,7 @@ dependencies = [
 
 [[package]]
 name = "rustybox-assets"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "aes-gcm",
  "serde",
@@ -499,7 +499,7 @@ dependencies = [
 
 [[package]]
 name = "rustybox-atlas"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "base64",
  "image",
@@ -514,7 +514,7 @@ dependencies = [
 
 [[package]]
 name = "rustybox-build"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "embed-resource",
  "image",
@@ -524,7 +524,7 @@ dependencies = [
 
 [[package]]
 name = "rustybox-core"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -532,14 +532,14 @@ dependencies = [
 
 [[package]]
 name = "rustybox-graphics"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "windows",
 ]
 
 [[package]]
 name = "rustybox-launcher"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "rustybox-sdk",
  "serde_json",
@@ -548,7 +548,7 @@ dependencies = [
 
 [[package]]
 name = "rustybox-sdk"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "libloading",
  "rustybox-core",
@@ -560,7 +560,7 @@ dependencies = [
 
 [[package]]
 name = "rustybox-showcase"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "rustybox-assets",
  "rustybox-sdk",
@@ -572,7 +572,7 @@ dependencies = [
 
 [[package]]
 name = "rustybox-starter"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "rustybox-build",
  "rustybox-sdk",
@@ -582,7 +582,7 @@ dependencies = [
 
 [[package]]
 name = "rustybox-steam"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "rustybox-assets",
  "rustybox-sdk",
@@ -592,7 +592,7 @@ dependencies = [
 
 [[package]]
 name = "rustybox-ui"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "libloading",
  "percent-encoding",
@@ -601,6 +601,7 @@ dependencies = [
  "serde_json",
  "webview2-com",
  "windows",
+ "windows-core",
 ]
 
 [[package]]

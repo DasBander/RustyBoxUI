@@ -43,11 +43,52 @@ For a signed MSIX, set `RUSTYBOX_SIGN_THUMBPRINT` to the thumbprint of your code
 
 The installer also registers the app’s declared file types and protocols. For updates, prepare a signed feed with `cargo rustybox publish`. [Shell associations](ACTIVATION.md) · [Hosting an update feed](UPDATES.md)
 
+## Large game resources
+
+Place a level archive, video or model under `ui/` and keep its usual relative URL. Starting with 0.6, the packer streams files into RBPAK v2 using 64-bit lengths and offsets. V1 authenticated each file in one operation, even for a short range request. Its 128 MiB file limit, 65,535-entry limit and 8 MiB encrypted index limit bounded those allocations. In v2 the index grows with the number and length of asset names. The runtime holds that lookup table in memory. Available storage, memory for metadata and the target filesystem still set practical limits. Windows x64 verification included a 4,294,983,687-byte file and a separate package with 65,537 input files.
+
+| Field in `rustybox.json` → `resources` | Default | Effect |
+| --- | --- | --- |
+| `chunkSizeKiB` | `1024` | Plaintext per authenticated block, from 4 through 16384 KiB. Smaller blocks read less data for scattered requests. Larger blocks reduce the number of authentication tags for sequential reads. |
+| `partSizeMiB` | Omitted | A positive integer ceiling for each on-disk data part, including the 16-byte tag per block. One full encrypted block must fit. Omit the field to keep everything in the main package. |
+
+For example, set `"resources": { "chunkSizeKiB": 256, "partSizeMiB": 16 }` to use 256 KiB blocks and data parts of at most 16 MiB. A single source file can cross any number of blocks and parts. Small files share blocks. The main `starter-ui.rbpak` holds the encrypted index and footer. In split mode, `starter-ui.rbpak.chunks-<generation>/00000000.rbchunk` and its numbered siblings hold the data. The part ceiling applies to those data files. Always distribute the complete `out/` from the same build. Both portable ZIP and MSIX packaging collect the directory automatically. For a Microsoft Store submission, its size limit applies to the complete MSIX package. [Microsoft Store package requirements](https://learn.microsoft.com/en-us/windows/apps/publish/publish-your-app/package-version-numbering#package-format-requirements)
+
+A web game can fetch a region of a level with a standard HTTP byte range. The end byte is inclusive.
+
+```js
+const response = await fetch("./levels/world.bin", {
+  headers: { Range: "bytes=1048576-1114111" }
+});
+if (response.status !== 206) throw new Error("Could not read level region");
+const region = new Uint8Array(await response.arrayBuffer());
+if (region.byteLength !== 65_536) throw new Error("Incomplete level region");
+```
+
+A full GET also streams. Consume `response.body` to process a large resource incrementally. Calling `arrayBuffer()` on the full response collects the entire file in JavaScript memory. The packaged origin supports one closed, open-ended or suffix range per request, reports the size on HEAD and returns 416 for an unsatisfiable range. Media elements can issue their own range requests. The runtime authenticates a block before returning bytes from it. An unreadable first block returns HTTP 500. If a later block fails after the headers have been sent, WebView2 can deliver a short response. Check the received byte count when the game needs a complete record.
+
+For Rust-only data, use `ui/_native/`. From a generated project, run `cargo add --path vendor/assets` to use the following Rust API. `Assets::reader` implements `Read` and `Seek` in development and release builds. `Assets::read` is a convenience for loading an entire small file.
+
+```rust
+use rustybox_assets::Assets;
+use std::io::{Read, Seek, SeekFrom};
+
+fn level_header() -> Result<[u8; 32], Box<dyn std::error::Error>> {
+    let web_root = std::env::current_exe()?.with_file_name("starter-ui");
+    let assets = Assets::open(&web_root)?;
+    let mut level = assets.reader("_native/world.bin")?.ok_or("Missing world")?;
+    level.seek(SeekFrom::Start(1_048_576))?;
+    let mut header = [0; 32];
+    level.read_exact(&mut header)?;
+    Ok(header)
+}
+```
+
+The 0.6 runtime also opens packages made with 0.5 and earlier v1 tooling. For those packages, a read authenticates the entire entry. To use v2 in an existing app, update the CLI, DLLs and generated build script together, then rebuild the executable and resources. Older DLLs require v1 packages. Each cook uses a fresh key and, for split output, a new part directory. Custom deployment tools should replace the matching executable, index and parts as one build. Retain older part directories as long as a running client or rollback release needs them. Independent DLC installation and cross-release delta patching require a separate delivery mechanism.
+
 ## What the asset package protects
 
-The packer walks the application's web directory, skips development artifacts such as source maps and type declarations, and generates a fresh 256-bit content key. AES-GCM authenticates each encrypted file and the encrypted directory containing names and offsets. The host carries the content key and adjacent package name in a Windows executable resource. Ship the matching executable and package together.
-
-WebView2 requests a page, module or image at the app's ordinary local HTTPS origin. The runtime authenticates the requested file and serves the bytes from memory. Media can request byte ranges. Assets under `_native/` are available to Rust through `rustybox_assets::Assets::read` and are excluded from the packaged web origin. Missing or damaged packages and invalid authentication tags cause loading to fail. App profile data and files that the user explicitly exports are separate from packaged assets.
+The packer generates a fresh 256-bit content key for every build. AES-GCM authenticates the payload blocks, the encrypted filename index and the footer that locates them. The host carries the content key and adjacent package name in a Windows executable resource. WebView2 receives plaintext on demand at the app’s own HTTPS origin. Rust-only files under `_native/` are excluded from that origin.
 
 Opening the portable ZIP shows the encrypted package. A person who controls a running client can inspect its web content or recover the embedded key. Keep signing keys, service credentials and proprietary logic that must stay confidential on a server. Package encryption covers casual extraction and detects corruption. Publisher identity comes from a trusted signature on the final distribution.
 

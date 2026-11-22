@@ -48,7 +48,8 @@ typedef struct RBConfig {
 /* View calls must run on the creating STA thread. All UTF-8 inputs are copied.
    Pointers must be valid, aligned, and live for the duration of each call.
    rb_create pumps messages while WebView2 initializes; do not call it from a UI callback.
-   Destroy all handles before unloading the DLL. Do not call the SDK from DllMain. */
+   Destroy all handles before releasing the DLL. Packaged WebView2 streams can outlive their windows
+   and keep the UI module mapped until process exit. Do not call the SDK from DllMain. */
 RB_API uint32_t rb_abi_version(void);
 RB_API int32_t rb_create(const RBConfig *config, RBHandle *out);
 /* Pump the creating STA between status calls. OK promotes the ticket to a view.

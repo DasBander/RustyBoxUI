@@ -9,7 +9,11 @@ use windows::{
 const NAME: PCWSTR = w!("RUSTYBOX_ASSETS_V1");
 const DATA: PCWSTR = PCWSTR(10 as *const u16); // RT_RCDATA
 pub fn bind(executable: &Path, filename: &str, key: &[u8; 32]) -> Result<()> {
-    if !super::valid_name(filename) || filename.contains('/') || !filename.ends_with(".rbpak") {
+    if filename.len() > 2048
+        || !super::valid_name(filename)
+        || filename.contains('/')
+        || !filename.ends_with(".rbpak")
+    {
         return Err("Package must be an adjacent .rbpak file".into());
     }
     let mut descriptor = key.to_vec();

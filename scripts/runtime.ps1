@@ -10,7 +10,9 @@ foreach($name in $showcaseApps){$groups["$name-ui"]=@($name)}
 foreach($folder in $groups.Keys){
     $assets=Join-Path $Sdk $folder
     $hosts=@($groups[$folder] | ForEach-Object {Join-Path $runtime.FullName "rustybox-$_.exe"})
-    & (Join-Path $Sdk 'cargo-rustybox.exe') seal $assets (Join-Path $runtime.FullName "$folder.rbpak") @hosts
+    $options = @()
+    if ($folder -eq 'starter-ui') { $options = @('--manifest', (Join-Path $Sdk 'examples\starter\rustybox.json')) }
+    & (Join-Path $Sdk 'cargo-rustybox.exe') seal @options $assets (Join-Path $runtime.FullName "$folder.rbpak") @hosts
     if($LASTEXITCODE){throw "Could not seal $folder"}
     foreach($credit in (Get-ChildItem -LiteralPath $assets -File -Recurse | Where-Object {$_.Name -match '(^CREDITS\.md$|[-_]OFL\.txt$|^LICENSE)'})){
         $relative=$credit.FullName.Substring($assets.Length+1)

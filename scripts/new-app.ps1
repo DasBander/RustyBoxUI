@@ -37,7 +37,7 @@ Copy-Item -LiteralPath (Join-Path $sdk 'Cargo.lock') -Destination $target
 $vendor = Join-Path $target 'vendor'
 $dlls = Join-Path $target 'runtime'
 New-Item -ItemType Directory -Force -Path $vendor, $dlls | Out-Null
-foreach ($crate in 'core', 'sdk', 'build') {
+foreach ($crate in 'core', 'sdk', 'assets', 'build') {
     Copy-Item -LiteralPath (Join-Path $sdk "crates\$crate") -Destination $vendor -Recurse
 }
 

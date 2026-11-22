@@ -86,7 +86,7 @@ export function createPreviewClient() {
       if (method === 'runtime.info')
         return {
           name: 'RustyBoxUI',
-          version: '0.5.0',
+          version: '0.6.0',
           engine: 'Browser preview',
           platform: 'browser',
           graphicsAvailable: false,

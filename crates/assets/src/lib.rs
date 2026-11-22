@@ -2,7 +2,7 @@
 mod binding;
 mod package;
 pub use binding::bind;
-pub use package::{Package, Result, cook, valid_name};
+pub use package::{AssetReader, PackOptions, Package, Result, cook, cook_with_options, valid_name};
 use std::path::{Path, PathBuf};
 
 pub enum Assets {
@@ -25,8 +25,19 @@ impl Assets {
         if !valid_name(name) {
             return Err("Invalid asset name".into());
         }
+        if let Self::Packed(package) = self {
+            return package.read(name);
+        }
+        self.reader(name)?.map(package::read_all).transpose()
+    }
+
+    /// Open an asset for incremental reads and seeks in both development and packaged builds.
+    pub fn reader(&self, name: &str) -> Result<Option<AssetReader>> {
+        if !valid_name(name) {
+            return Err("Invalid asset name".into());
+        }
         match self {
-            Self::Packed(package) => package.read(name),
+            Self::Packed(package) => package.reader(name),
             Self::Directory(root) => {
                 let path = match root.join(name).canonicalize() {
                     Ok(p) if p.starts_with(root) => p,
@@ -34,7 +45,10 @@ impl Assets {
                     Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
                     Err(e) => return Err(package::error(e)),
                 };
-                std::fs::read(path).map(Some).map_err(package::error)
+                std::fs::File::open(path)
+                    .and_then(AssetReader::loose)
+                    .map(Some)
+                    .map_err(package::error)
             }
         }
     }

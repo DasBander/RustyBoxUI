@@ -7,7 +7,7 @@ if (-not $SkipBuild) {
     & (Join-Path $PSScriptRoot 'build.ps1') -Configuration release
 }
 if (-not $Destination) {
-    $Destination = Join-Path $projectRoot 'dist\RustyBoxUI-0.5.0'
+    $Destination = Join-Path $projectRoot 'dist\RustyBoxUI-0.6.0'
 }
 $destination = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Destination).TrimEnd('\')
 $parent = Split-Path -Parent $destination
@@ -87,11 +87,11 @@ resolver = "2"
 
     & (Join-Path $PSScriptRoot 'runtime.ps1') -Sdk $bundle
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    $archive = Join-Path $parent 'RustyBoxUI-0.5.0-windows-x64.zip'
+    $archive = Join-Path $parent 'RustyBoxUI-0.6.0-windows-x64.zip'
     $stagedArchive = Join-Path $stageRoot 'release.zip'
     [IO.Compression.ZipFile]::CreateFromDirectory($bundle, $stagedArchive, 'Optimal', $true)
 
-    $runtimeArchive = Join-Path $parent 'RustyBoxUI-0.5.0-apps-windows-x64.zip'
+    $runtimeArchive = Join-Path $parent 'RustyBoxUI-0.6.0-apps-windows-x64.zip'
     $stagedRuntime = Join-Path $stageRoot 'runtime.zip'
     [IO.Compression.ZipFile]::CreateFromDirectory((Join-Path $bundle 'runtime'), $stagedRuntime, 'Optimal', $false)
     if ((Split-Path -Parent $bundle) -ne $stageRoot -or (Split-Path -Parent $destination) -ne $parent) {

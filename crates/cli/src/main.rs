@@ -52,6 +52,44 @@ fn sdk_root(explicit: Option<&OsString>) -> Result<PathBuf> {
         .find(|p| p.join("scripts/new-app.ps1").is_file())
         .ok_or("Set RUSTYBOX_SDK or pass --sdk pointing to the SDK or built checkout".into())
 }
+/// Bind the staged hosts only after the index and every requested part have been written.
+fn seal(mut args: &[OsString]) -> Result<()> {
+    let mut options = rustybox_assets::PackOptions::default();
+    if args.first().is_some_and(|arg| arg == "--manifest") {
+        let path = args
+            .get(1)
+            .ok_or("seal --manifest needs a project manifest")?;
+        let text = std::fs::read_to_string(path)
+            .map_err(|e| format!("Cannot read project manifest: {e}"))?;
+        let manifest: serde_json::Value =
+            serde_json::from_str(text.trim_start_matches('\u{feff}')).map_err(|e| e.to_string())?;
+        if let Some(settings) = manifest.get("resources") {
+            options = serde_json::from_value(settings.clone())
+                .map_err(|e| format!("Invalid resources settings: {e}"))?;
+        }
+        args = &args[2..];
+    }
+    let [root, output, hosts @ ..] = args else {
+        return Err("Usage: seal [--manifest rustybox.json] <web-root> <package> <exe>...".into());
+    };
+    let output = Path::new(output);
+    if output.exists() {
+        return Err("Seal into a fresh staging directory".into());
+    }
+    let name = output
+        .file_name()
+        .and_then(|v| v.to_str())
+        .ok_or("Invalid package filename")?;
+    if hosts.is_empty() || hosts.iter().any(|exe| !Path::new(exe).is_file()) {
+        return Err("Missing staged executable".into());
+    }
+    let key = rustybox_assets::cook_with_options(Path::new(root), output, options)?;
+    for exe in hosts {
+        rustybox_assets::bind(Path::new(exe), name, &key)?;
+    }
+    Ok(())
+}
+
 fn run() -> Result<()> {
     let mut args: Vec<_> = env::args_os().skip(1).collect();
     if args.first().is_some_and(|v| v == "rustybox") {
@@ -89,26 +127,7 @@ fn run() -> Result<()> {
             rustybox_build::write_msix_icons(Path::new(&args[1]), Path::new(&args[2]))
                 .map_err(|e| e.to_string())
         }
-        "seal" if args.len() >= 4 => {
-            let output = Path::new(&args[2]);
-            if output.exists() {
-                return Err("Seal into a fresh staging directory".into());
-            }
-            let name = output
-                .file_name()
-                .and_then(|v| v.to_str())
-                .ok_or("Invalid package filename")?;
-            for exe in &args[3..] {
-                if !Path::new(exe).is_file() {
-                    return Err("Missing staged executable".into());
-                }
-            }
-            let key = rustybox_assets::cook(Path::new(&args[1]), output)?;
-            for exe in &args[3..] {
-                rustybox_assets::bind(Path::new(exe), name, &key)?;
-            }
-            Ok(())
-        }
+        "seal" => seal(&args[1..]),
         _ => Err(HELP.into()),
     }
 }

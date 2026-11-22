@@ -102,7 +102,7 @@ Run `.\build.ps1 -Run`, enter `one two three` and submit the form. It displays *
 
 ## Distribute your app
 
-In the generated project, run `.\build.ps1` or `cargo rustybox build`. Copy the complete `out\` directory to a Windows x64 machine with WebView2 Evergreen and launch `out\rustybox-starter.exe`. The directory contains the host, two runtime DLLs, a sealed `starter-ui.rbpak` and redistribution notices.
+In the generated project, run `.\build.ps1` or `cargo rustybox build`. Copy the complete `out\` directory to a Windows x64 machine with WebView2 Evergreen and launch `out\rustybox-starter.exe`. The directory contains the host, two runtime DLLs, a sealed `starter-ui.rbpak`, any configured data parts and redistribution notices. Put large game files under `ui/` as usual. [Configure chunk sizes and split output](PACKAGING.md#large-game-resources)
 
 For a portable ZIP and MSIX, edit `rustybox.json` and run `cargo rustybox package`. Users can extract the portable ZIP and run the executable directly. To let Explorer open documents or app links, declare the file types and protocols, then sign and install the MSIX. For automatic updates, distribute the `.appinstaller` feed. [Branding and signing](PACKAGING.md) · [File and link registration](ACTIVATION.md) · [Publish an update](UPDATES.md)
 
@@ -112,7 +112,7 @@ From the framework source checkout, run `.\scripts\package.ps1`. If you already 
 
 | Archive | After extraction |
 | --- | --- |
-| `RustyBoxUI-0.5.0-windows-x64.zip` | Open the `RustyBoxUI-0.5.0` folder for the CLI, DLLs, import libraries, C header, editable examples, screenshots and documentation. |
-| `RustyBoxUI-0.5.0-apps-windows-x64.zip` | Open `rustybox-launcher.exe` for the storefront or `rustybox-starter.exe` for the starter. Keep the executable, DLLs, `.rbpak` files and license notices together. |
+| `RustyBoxUI-0.6.0-windows-x64.zip` | Open the `RustyBoxUI-0.6.0` folder for the CLI, DLLs, import libraries, C header, editable examples, screenshots and documentation. |
+| `RustyBoxUI-0.6.0-apps-windows-x64.zip` | Open `rustybox-launcher.exe` for the storefront or `rustybox-starter.exe` for the starter. Keep the executable, DLLs, `.rbpak` files and license notices together. |
 
 For a frontend-only preview from source, run `npm run preview` for the storefront or `npm run preview:steam` for the library. Open `http://127.0.0.1:4173`. Browser previews use local storage. Use the Windows hosts to exercise native commands, window controls and Direct3D.

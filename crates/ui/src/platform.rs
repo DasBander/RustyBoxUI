@@ -1,5 +1,6 @@
 //! Thread-affine view registry and shutdown for the Windows runtime.
 mod bridge;
+mod resource_stream;
 mod resources;
 mod startup;
 mod viewport;

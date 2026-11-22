@@ -1,8 +1,8 @@
 # RustyBoxUI
 
-RustyBoxUI is a Windows x64 framework for building desktop apps with Rust, HTML, CSS and JavaScript. The current developer preview is **0.5.0**. One DLL hosts WebView2 and connects the page to native commands. A second DLL lets a Rust or C++ host put a Direct3D 11 texture behind HTML controls in the same window.
+RustyBoxUI is a Windows x64 framework for building desktop apps with Rust, HTML, CSS and JavaScript. The current developer preview is **0.6.0**. One DLL hosts WebView2 and connects the page to native commands. A second DLL lets a Rust or C++ host put a Direct3D 11 texture behind HTML controls in the same window.
 
-Release builds bundle your HTML, scripts and media into an encrypted `.rbpak` file beside the executable. [Packaging resources](#packaging-resources)
+Release builds stream HTML, scripts and game data from encrypted resources. Ship one `.rbpak` or split large payloads into part files. [Packaging resources](#packaging-resources)
 
 [![The Last Signal in a 1560 × 618 storefront window, with View game and Wishlist visible beneath the description](docs/images/storefront-short.jpg)](docs/images/storefront-short.jpg)
 
@@ -46,7 +46,17 @@ ui/
 
 In `index.html`, use `<img src="./images/cover.webp" alt="Featured game cover">`. In `app.js`, `fetch("./data/catalog.json")` reads the catalog. Both paths work with `cargo rustybox dev` and in the packaged app.
 
-Each input file can be up to 128 MiB. The packer skips dot-prefixed entries, `node_modules/`, `*.map` and `*.d.ts`. For Rust-only resources, put files under `ui/_native/`. Hosts using `rustybox-assets` can read them with `Assets::read`. The packaged WebView returns HTTP 404 for those paths.
+A game can ship a multi-gigabyte level, video or texture archive as one source file. The packer reads it in 1 MiB chunks by default. WebView2 can seek to a byte range and the runtime authenticates only the chunks it reads. The packer skips dot-prefixed entries, `node_modules/`, `*.map` and `*.d.ts`. Files under `ui/_native/` are available to Rust through `Assets::reader` and return HTTP 404 at the packaged web origin.
+
+For separate distribution files, merge these settings into `rustybox.json`. The example keeps each encrypted data part at or below 64 MiB. The game continues using paths such as `./levels/world.bin`.
+
+```json
+{
+  "resources": { "chunkSizeKiB": 1024, "partSizeMiB": 64 }
+}
+```
+
+Omit `partSizeMiB` to keep the chunks inside one `.rbpak`. With split output, ship the adjacent `starter-ui.rbpak.chunks-…/` directory along with the main package. The portable ZIP and MSIX include both. [Streaming, byte ranges and format compatibility](docs/PACKAGING.md#large-game-resources)
 
 Run the command for the output you want from the generated project directory.
 
@@ -55,7 +65,7 @@ Run the command for the output you want from the generated project directory.
 | `cargo rustybox build` | A runnable `out/` folder containing the executable, `starter-ui.rbpak`, `rustybox_ui.dll`, `rustybox_graphics.dll` and `licenses/`. Ship the complete folder. |
 | `cargo rustybox package` | Builds the app and writes `dist/<identity>-<version>-portable.zip` and `dist/<identity>-<version>.msix` with the sealed resources. |
 
-Each release build embeds a fresh AES-256-GCM key in the executable. The packer uses it to encrypt and authenticate the assets and their filename index. Keep the `.exe` and `.rbpak` from the same build together. This protects against casual extraction from the distribution. Someone who controls a running client can still inspect the content it loads. [Asset protection and installer signing](docs/PACKAGING.md)
+Each release build embeds a fresh AES-256-GCM key in the executable. The packer uses it to encrypt and authenticate the assets and their filename index. Keep the executable, index and any part files from the same build together. This protects against casual extraction from the distribution. Someone who controls a running client can still inspect the content it loads. [Asset protection and installer signing](docs/PACKAGING.md)
 
 ## Give your app a Windows identity
 
