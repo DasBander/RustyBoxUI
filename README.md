@@ -2,7 +2,16 @@
 
 RustyBoxUI is a Windows x64 framework for building desktop apps with Rust, HTML, CSS and JavaScript. The current developer preview is **0.7.0**. One DLL hosts WebView2 and connects the page to native commands. A second DLL lets a Rust or C++ host put a Direct3D 11 texture behind HTML controls in the same window.
 
-Release builds stream HTML, scripts and game data from encrypted resources. Ship one `.rbpak` or split large payloads into part files. [Packaging resources](#packaging-resources) · [Play the Talus flight game](#talus)
+Release builds stream HTML, scripts and game data from encrypted resources. Ship one `.rbpak` or split large payloads into part files. [Packaging resources](#packaging-resources) · [Talus gameplay screenshots](#talus)
+
+## Windows downloads
+
+| Download | After extracting the entire ZIP |
+| --- | --- |
+| [Play Talus on Windows x64](https://github.com/DasBander/RustyBoxUI/releases/download/v0.7.0/Talus-0.7.0-windows-x64.zip) | Double-click `rustybox-talus.exe` to fly Copper Narrows. |
+| [Download the Windows x64 SDK](https://github.com/DasBander/RustyBoxUI/releases/download/v0.7.0/RustyBoxUI-0.7.0-windows-x64.zip) | Open the `RustyBoxUI-0.7.0` folder and run `rustybox-starter.exe` to try the framework. |
+
+Both downloads are ready to run with the Microsoft Edge WebView2 Evergreen Runtime. [Get WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) · [0.7.0 release notes](https://github.com/DasBander/RustyBoxUI/releases/tag/v0.7.0)
 
 [![The Last Signal in a 1560 × 618 storefront window, with View game and Wishlist visible beneath the description](docs/images/storefront-short.jpg)](docs/images/storefront-short.jpg)
 
@@ -94,7 +103,7 @@ Run `cargo rustybox build` to get `out/Northstar Studio.exe` alongside its DLLs 
 
 Fly a hang glider through nine gates along the river in Copper Narrows. The 2.22 km WebGL time trial adds four seconds for each missed gate and saves your personal best. Steer with the arrow keys, hold **Space** to boost and press **F11** for a fullscreen view with the window controls hidden.
 
-Launch the Windows game with `.\scripts\run.ps1 -Example talus` after building the checkout. To play in a browser, run `npm run preview:talus` from the repository root and open the local URL it prints. [Controls and scoring](docs/EXAMPLES.md#fly-copper-narrows) · [Game source](examples/showcase/talus/ui)
+To play the Windows download, extract the ZIP and open `rustybox-talus.exe`. From a built checkout, use `.\scripts\run.ps1 -Example talus`. For the browser edition, run `npm run preview:talus` from the repository root and open the local URL it prints. [Download Talus for Windows x64](https://github.com/DasBander/RustyBoxUI/releases/download/v0.7.0/Talus-0.7.0-windows-x64.zip) · [Controls and scoring](docs/EXAMPLES.md#fly-copper-narrows) · [Game source](examples/showcase/talus/ui)
 
 [![The glider banks left toward the second gate at 307 km/h in fullscreen](docs/images/talus-bank.jpg)](docs/images/talus-bank.jpg)
 
