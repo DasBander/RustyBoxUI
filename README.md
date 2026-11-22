@@ -151,5 +151,12 @@ Run `.\scripts\package.ps1` from the source checkout to create the Windows SDK, 
 ![Starter showing a note opened from Explorer and a greeting opened through an app link](docs/images/starter-activation.jpg)
 
 ## License and credits
+ Copyright 2026 Marc Fraedrich
 
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+       
 The framework and original example code use the [Apache License 2.0](LICENSE). Bundled fonts, photographs, film artwork and software dependencies have their own terms. [Storefront artwork and fonts](ui/art/CREDITS.md) · [Showcase fonts](examples/showcase/common/fonts) · [Talus artwork and fonts](examples/showcase/talus/ui/CREDITS.md) · [Racing typeface](examples/showcase/racing/ui/fonts) · [Atlas imagery](examples/atlas/ui/plates/CREDITS.md) · [Radio guide photograph](examples/steam/ui/media/CREDITS.md) · [Third-party software notices](licenses/README.md)
