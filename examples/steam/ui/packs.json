@@ -1,0 +1,121 @@
+[
+  {
+    "id": "signal",
+    "channels": [
+      {
+        "station": "Intake shaft",
+        "frequency": 913
+      },
+      {
+        "station": "Turbine hall",
+        "frequency": 976
+      },
+      {
+        "station": "Control room",
+        "frequency": 1038
+      }
+    ]
+  },
+  {
+    "id": "afterlight",
+    "channels": [
+      {
+        "station": "West gate",
+        "frequency": 938
+      },
+      {
+        "station": "Market roof",
+        "frequency": 1006
+      },
+      {
+        "station": "Watchtower",
+        "frequency": 1057
+      }
+    ]
+  },
+  {
+    "id": "drift",
+    "channels": [
+      {
+        "station": "Pit lane",
+        "frequency": 912
+      },
+      {
+        "station": "Marshals",
+        "frequency": 995
+      },
+      {
+        "station": "Race control",
+        "frequency": 1056
+      }
+    ]
+  },
+  {
+    "id": "everwild",
+    "channels": [
+      {
+        "station": "North trail",
+        "frequency": 909
+      },
+      {
+        "station": "Forest pass",
+        "frequency": 967
+      },
+      {
+        "station": "High pasture",
+        "frequency": 1024
+      }
+    ]
+  },
+  {
+    "id": "orbit",
+    "channels": [
+      {
+        "station": "Docking crew",
+        "frequency": 926
+      },
+      {
+        "station": "Freight hold",
+        "frequency": 984
+      },
+      {
+        "station": "Flight deck",
+        "frequency": 1062
+      }
+    ]
+  },
+  {
+    "id": "hollow",
+    "channels": [
+      {
+        "station": "Camp",
+        "frequency": 934
+      },
+      {
+        "station": "Woodland path",
+        "frequency": 990
+      },
+      {
+        "station": "Lookout",
+        "frequency": 1048
+      }
+    ]
+  },
+  {
+    "id": "coast",
+    "channels": [
+      {
+        "station": "Harbor",
+        "frequency": 902
+      },
+      {
+        "station": "Skiff",
+        "frequency": 977
+      },
+      {
+        "station": "Lighthouse",
+        "frequency": 1035
+      }
+    ]
+  }
+]

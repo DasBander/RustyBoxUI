@@ -1,0 +1,17 @@
+target/
+/dist/
+/artifacts/
+/tests/
+/benchmarks/
+/scripts/test*.ps1
+/scripts/smoke*.ps1
+/scripts/benchmark.ps1
+node_modules/
+.vs/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+Desktop.ini

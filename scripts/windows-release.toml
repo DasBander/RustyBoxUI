@@ -1,0 +1,6 @@
+# Ship x64 binaries with the C runtime linked in. Host-side proc macros use their normal runtime.
+[build]
+target = "x86_64-pc-windows-msvc"
+
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

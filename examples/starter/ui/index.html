@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>RustyBox starter</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="starter.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <header data-rb-drag>
+      <strong>RustyBox starter</strong><button id="close" aria-label="Close window">×</button>
+    </header>
+    <main>
+      <h1>Say hello.</h1>
+      <form>
+        <rb-field label="Your name"
+          ><input name="name" autocomplete="given-name" required maxlength="100" /></rb-field
+        ><button type="submit">Greet</button>
+      </form>
+      <output role="status"></output>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>Splice Room — Wave editor</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="chrome.css" />
+    <link rel="stylesheet" href="app.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <header
+      class="chrome"
+      data-rb-drag
+      data-brand="Splice Room"
+      data-context="Wave editor"
+    ></header>
+    <main>
+      <div class="document">
+        <div>
+          <h1 id="filename">Breakwater</h1>
+          <p id="format"></p>
+        </div>
+        <button id="open" class="action">Open WAV…</button
+        ><input id="file" type="file" accept=".wav,.wave,audio/wav,audio/x-wav" hidden />
+      </div>
+      <section class="timeline" aria-label="Waveform editor">
+        <div class="timeline-head"><strong>Waveform</strong><span id="channels"></span></div>
+        <div class="wave">
+          <canvas
+            id="wave"
+            aria-label="Waveform. Drag a range to select a loop. Use the selection fields below for keyboard editing."
+          ></canvas>
+        </div>
+        <div class="transport">
+          <button id="play" class="action" aria-label="Play selection">Play</button
+          ><button id="stop" class="action outlined">Stop</button
+          ><button id="loop" class="action tonal" aria-pressed="true">Loop on</button
+          ><output id="clock">00:00.000</output>
+        </div>
+      </section>
+      <section class="selection">
+        <h2>Selection</h2>
+        <div class="values">
+          <label>Start <input id="start" type="number" min="0" step=".001" /> s</label
+          ><label>End <input id="end" type="number" min="0" step=".001" /> s</label>
+          <div><small>Length</small><output id="length"></output></div>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <span id="notice" role="status">Drop a WAV file to open it</span
+      ><span>Space &nbsp; Play / pause</span>
+    </footer>
+  </body>
+</html>

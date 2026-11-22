@@ -1,0 +1,8 @@
+* text=auto eol=lf
+*.jpg binary
+*.webp binary
+*.wav binary
+*.woff2 binary
+# Keep upstream license files byte-for-byte, including their original spacing.
+*-OFL.txt -text whitespace=-trailing-space
+licenses/WebView2-SDK-*.txt -text whitespace=-trailing-space

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>Atlas — Texture workspace</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="atlas.css" />
+    <script type="module" src="atlas.js"></script>
+  </head>
+  <body>
+    <header class="chrome" data-rb-drag>
+      <div class="brand">
+        <svg aria-hidden="true" width="28" height="28" viewBox="0 0 28 28">
+          <path fill="currentColor" d="m13 2 12 22h-6.4L13 13.3 7.3 24H1z" />
+          <path d="m16.4 23.9 3-5.4H9.5l-3 5.4z" fill="currentColor" /></svg
+        >Atlas
+      </div>
+      <span class="divider"></span><span class="workspace-label">Texture workspace</span>
+      <div class="window-buttons" data-rb-no-drag>
+        <button data-window="minimize" aria-label="Minimize">−</button
+        ><button data-window="maximize" aria-label="Maximize">□</button
+        ><button data-window="close" aria-label="Close">×</button>
+      </div>
+    </header>
+    <div class="heading">
+      <div>
+        <p class="breadcrumb">Workspace <span>/</span> Collections</p>
+        <h1>Earth observations</h1>
+      </div>
+      <button class="primary" id="import">
+        <span aria-hidden="true">＋</span> Import image <kbd>Ctrl O</kbd>
+      </button>
+    </div>
+    <main>
+      <section class="viewer" aria-label="Texture viewer">
+        <div class="bar">
+          <div class="bar-name"><span data-icon="grid"></span> Viewport</div>
+          <div class="tools">
+            <button id="fit" title="Fit image within the viewport">Fit</button
+            ><button id="fill" title="Fill the viewport">Fill</button><i></i
+            ><button id="zoom-out" aria-label="Zoom out">−</button><output id="zoom">100%</output
+            ><button id="zoom-in" aria-label="Zoom in">+</button>
+          </div>
+        </div>
+        <div class="stage">
+          <rb-native-view aria-label="Direct3D texture preview" role="img"></rb-native-view>
+          <div class="stage-overlay">
+            <div id="file-chip" class="chip">Opening viewport…</div>
+            <rb-menu id="channels"
+              ><button class="overlay-button">
+                <span data-icon="channels" aria-hidden="true"></span
+                ><span id="channel-name">RGB channels</span><span aria-hidden="true">⌄</span>
+              </button>
+              <div role="menu" aria-label="Display channel" hidden></div>
+            </rb-menu>
+          </div>
+          <button id="motion" class="motion" aria-pressed="false">
+            <span data-icon="play"></span><span>Pan preview</span>
+          </button>
+        </div>
+        <div class="viewer-foot">
+          <span><span id="render-status">Connecting</span></span
+          ><span id="device"></span>
+        </div>
+      </section>
+      <aside aria-label="Asset inspector">
+        <div class="aside-heading"><span data-icon="settings"></span> Inspector</div>
+        <div class="inspector-body">
+          <p class="label">Selected texture</p>
+          <h2 id="title">Loading…</h2>
+          <p id="location"></p>
+          <dl>
+            <div>
+              <dt>Dimensions</dt>
+              <dd id="dimensions">—</dd>
+            </div>
+            <div>
+              <dt>File size</dt>
+              <dd id="size">—</dd>
+            </div>
+            <div>
+              <dt>Format</dt>
+              <dd id="format">—</dd>
+            </div>
+            <div>
+              <dt>GPU texture</dt>
+              <dd>RGBA8</dd>
+            </div>
+          </dl>
+          <p class="label section-label">Display channel</p>
+          <div id="swatches" role="group" aria-label="Display channel"></div>
+          <p class="label section-label">Source</p>
+          <p id="credit"></p>
+          <button id="details" class="text-button">
+            Image details <span aria-hidden="true">↗</span>
+          </button>
+        </div>
+      </aside>
+      <section class="collection" aria-label="Asset collection">
+        <div class="collection-head">
+          <div>
+            <h2>Collection</h2>
+            <span id="count">0 assets</span>
+          </div>
+          <rb-field label="Filter assets" class="search"
+            ><input
+              id="filter"
+              type="search"
+              placeholder="Filter assets…"
+              autocomplete="off"
+              spellcheck="false"
+          /></rb-field>
+        </div>
+        <div id="assets" role="group" aria-label="Select an asset"></div>
+      </section>
+    </main>
+    <footer>
+      <span><span class="small-brand">A</span> Atlas workspace</span
+      ><span id="notice" role="status">Opening collection…</span>
+    </footer>
+    <rb-dialog id="detail"
+      ><dialog aria-labelledby="detail-title">
+        <p class="label">Image details</p>
+        <h2 id="detail-title"></h2>
+        <p id="detail-copy"></p>
+        <button class="primary" data-dismiss autofocus>Done</button>
+      </dialog></rb-dialog
+    >
+  </body>
+</html>

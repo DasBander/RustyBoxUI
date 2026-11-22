@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="color-scheme" content="dark" />
+    <title>RustyBox Library</title>
+    <link
+      rel="preload"
+      href="sdk/fonts/inter-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="library.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <header class="chrome" data-rb-drag>
+      <div class="menubar" data-rb-drag>
+        <span class="brand"><span data-icon="cube"></span>RustyBox</span>
+        <rb-menu
+          ><button type="button">View</button>
+          <div role="menu" aria-label="View" hidden>
+            <button role="menuitem" data-value="home">Library home</button
+            ><button role="menuitem" data-value="collections">Collections</button
+            ><button role="menuitem" data-value="downloads">Downloads</button>
+          </div></rb-menu
+        >
+        <rb-menu
+          ><button type="button">Games</button>
+          <div role="menu" aria-label="Games" hidden>
+            <button role="menuitem" data-value="store">Add a game</button
+            ><button role="menuitem" data-value="ready">Ready to play</button>
+          </div></rb-menu
+        >
+        <button data-action="help">Help</button>
+        <div class="window-actions" data-rb-no-drag>
+          <button data-window="minimize" aria-label="Minimize">
+            <svg viewBox="0 0 12 12"><path d="M1 6.5h10" /></svg>
+          </button>
+          <button data-window="maximize" aria-label="Maximize or restore">
+            <svg viewBox="0 0 12 12"><path d="M1.5 1.5h9v9h-9z" /></svg>
+          </button>
+          <button data-window="close" aria-label="Close window">
+            <svg viewBox="0 0 12 12"><path d="m1.5 1.5 9 9m0-9-9 9" /></svg>
+          </button>
+        </div>
+      </div>
+      <div class="navbar" data-rb-drag>
+        <div class="history">
+          <button id="back" disabled aria-label="Back"><span data-icon="arrow"></span></button
+          ><button id="forward" disabled aria-label="Forward">
+            <span data-icon="arrow"></span>
+          </button>
+        </div>
+        <button
+          class="drawer-toggle square"
+          aria-label="Show game list"
+          aria-controls="sidebar"
+          aria-expanded="false"
+        >
+          <span data-icon="library"></span>
+        </button>
+        <nav class="primary-nav" aria-label="Main navigation">
+          <button data-go="store">Store</button><button data-go="home">Library</button
+          ><button data-go="collections">Collections</button>
+        </nav>
+        <button class="profile" data-action="profile">
+          <span class="avatar">P</span><span id="profile-name">Player One</span
+          ><span class="caret" aria-hidden="true"></span>
+        </button>
+      </div>
+    </header>
+    <div class="workspace">
+      <aside id="sidebar" aria-label="Game library">
+        <div class="side-head">
+          <button class="library-home" data-go="home">
+            <span data-icon="home"></span> Library home</button
+          ><button
+            class="square"
+            data-go="collections"
+            aria-label="Collections"
+            title="Collections"
+          >
+            <span data-icon="grid"></span>
+          </button>
+        </div>
+        <div class="side-tools">
+          <label class="search"
+            ><span data-icon="search"></span
+            ><input
+              id="search"
+              type="search"
+              placeholder="Search games"
+              aria-label="Search library games"
+              autocomplete="off" /></label
+          ><button
+            id="ready-filter"
+            class="square"
+            aria-pressed="false"
+            aria-label="Show installed games only"
+            title="Show installed games only"
+          >
+            <span data-icon="installed"></span>
+          </button>
+        </div>
+        <div id="game-list"></div>
+      </aside>
+      <button id="drawer-shade" aria-label="Close game list" hidden></button>
+      <main id="content" tabindex="-1" aria-busy="true"></main>
+    </div>
+    <footer>
+      <button data-go="store"><span data-icon="plus"></span>Add a game</button
+      ><button data-go="downloads">
+        <span data-icon="download"></span>Downloads<span id="download-count" hidden></span>
+      </button>
+    </footer>
+    <rb-dialog id="overlay"
+      ><dialog aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog
+    ></rb-dialog>
+    <div id="notice" role="status" aria-live="polite"></div>
+  </body>
+</html>

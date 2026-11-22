@@ -1,0 +1,16 @@
+{
+  "types": {
+    "Greeting": {
+      "name": "string"
+    },
+    "Message": {
+      "text": "string"
+    }
+  },
+  "commands": {
+    "greet": {
+      "input": "Greeting",
+      "output": "Message"
+    }
+  }
+}

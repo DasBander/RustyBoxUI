@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>Couch Library</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="chrome.css" />
+    <link rel="stylesheet" href="app.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <header class="chrome" data-rb-drag data-brand="Couch" data-context="Game library"></header>
+    <main>
+      <nav aria-label="Collections">
+        <div id="tabs"></div>
+        <span id="input-device">Keyboard</span>
+      </nav>
+      <section class="hero" aria-label="Selected game">
+        <img id="backdrop" alt="" />
+        <div class="shade"></div>
+        <div class="hero-text">
+          <p id="genre"></p>
+          <h1 id="title"></h1>
+          <p id="synopsis"></p>
+          <button id="details" class="action">Game details</button>
+        </div>
+      </section>
+      <section class="shelf">
+        <div class="shelf-head">
+          <h2 id="shelf-name">All games</h2>
+          <span id="count"></span>
+        </div>
+        <div id="tiles" role="group" aria-label="Game tiles"></div>
+        <p id="empty" hidden>Your favorites appear here when you save a game.</p>
+      </section>
+    </main>
+    <footer>
+      <span><kbd>A</kbd> Open <kbd>B</kbd> Back</span
+      ><span><kbd>LB</kbd><kbd>RB</kbd> Collections</span
+      ><span class="keyboard-help"
+        >Keyboard &nbsp; ↑ ↓ ← → &nbsp; Enter &nbsp; Esc &nbsp; Q / E</span
+      >
+    </footer>
+    <dialog id="game">
+      <div class="detail-art"><img id="game-art" alt="" /></div>
+      <div class="detail-body">
+        <p id="detail-genre"></p>
+        <h2 id="game-title"></h2>
+        <p id="description"></p>
+        <div class="actions">
+          <button id="play" class="action" hidden>Play time trial</button
+          ><button id="favorite" class="action tonal">Save to favorites</button
+          ><button id="back" class="action outlined">Back</button>
+        </div>
+        <small id="credit"></small>
+      </div>
+    </dialog>
+  </body>
+</html>

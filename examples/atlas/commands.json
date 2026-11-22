@@ -1,0 +1,33 @@
+{
+  "types": {
+    "Empty": {},
+    "Asset": {
+      "id": "string",
+      "title": "string",
+      "fileName": "string",
+      "location": "string",
+      "credit": "string",
+      "thumbnail": "string?",
+      "width": "u32",
+      "height": "u32",
+      "bytes": "u32"
+    },
+    "Selection": {
+      "id": "string"
+    }
+  },
+  "commands": {
+    "catalog": {
+      "input": "Empty",
+      "output": "Asset[]"
+    },
+    "selectAsset": {
+      "input": "Selection",
+      "output": "Asset"
+    },
+    "importImage": {
+      "input": "Empty",
+      "output": "Asset?"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>Relay — Game updates</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="chrome.css" />
+    <link rel="stylesheet" href="app.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <header class="chrome" data-rb-drag data-brand="Relay" data-context="Game updates"></header>
+    <main>
+      <div class="hero">
+        <img src="art/signal.webp" alt="" />
+        <div class="shade"></div>
+        <div class="hero-text">
+          <p class="eyebrow">The Last Signal</p>
+          <h1>Relay station<br />update</h1>
+          <span>Content update 1.4</span>
+        </div>
+      </div>
+      <section class="update">
+        <div class="overview">
+          <p class="eyebrow">Installation</p>
+          <h2 id="status">Checking files…</h2>
+          <p id="summary" role="status"></p>
+          <div class="progress-row">
+            <progress id="bar" max="100" value="0" aria-label="Verified bytes"></progress
+            ><output id="percent">0%</output>
+          </div>
+          <div class="totals"><span id="size"></span><span>Local package</span></div>
+          <div class="actions">
+            <button id="action" class="action" disabled>Install update</button
+            ><button id="verify" class="action outlined" disabled>Verify files</button>
+          </div>
+        </div>
+        <div class="manifest">
+          <h2>Package files</h2>
+          <div id="files"></div>
+        </div>
+      </section>
+    </main>
+    <footer><span>The Last Signal</span><span>SHA-256 verification</span></footer>
+  </body>
+</html>

@@ -1,0 +1,11 @@
+[package]
+name = "rustybox-launcher"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[dependencies]
+rustybox-sdk = { path = "../../crates/sdk" }
+serde_json.workspace = true
+windows.workspace = true

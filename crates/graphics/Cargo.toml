@@ -1,0 +1,13 @@
+[package]
+name = "rustybox-graphics"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[lib]
+name = "rustybox_graphics"
+crate-type = ["cdylib", "rlib"]
+
+[target.'cfg(windows)'.dependencies]
+windows.workspace = true

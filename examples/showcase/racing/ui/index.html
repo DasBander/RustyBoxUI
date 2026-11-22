@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>Nightshift — Red Mesa Circuit</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="chrome.css" />
+    <link rel="stylesheet" href="app.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <header class="chrome" data-rb-drag data-brand="Nightshift" data-context="Time trial"></header>
+    <main id="track" tabindex="-1" aria-label="Drive the Red Mesa circuit">
+      <rb-native-view aria-label="Native race scene" role="img"></rb-native-view>
+      <div class="track-head">
+        <div class="track-title">
+          <span class="series eyebrow">Desert series</span>
+          <h1>RED MESA</h1>
+        </div>
+        <div class="timing">
+          <div><small>LAP TIME</small><output id="time">00:00.000</output></div>
+          <div><small>PERSONAL BEST</small><output id="best">—</output></div>
+        </div>
+      </div>
+      <div id="brief">
+        <h2>Time trial</h2>
+        <p>One lap. 1.80 km.</p>
+        <button id="start" class="action">Start engine</button>
+      </div>
+      <div class="instrument">
+        <div class="speed"><output id="speed">000</output><small>KM/H</small></div>
+        <div class="rev"><i id="rev"></i></div>
+      </div>
+      <div class="lap">
+        <span>LAP <b>01 / 01</b></span>
+        <div class="lapline"><i id="distance"></i></div>
+        <output id="meters">0 / 1,800 m</output>
+      </div>
+    </main>
+    <footer>
+      <div class="keys">
+        <span><kbd>W</kbd> Accelerate</span><span><kbd>S</kbd> Brake</span
+        ><span><kbd>A</kbd><kbd>D</kbd> Steer</span>
+      </div>
+      <button id="pause" disabled><kbd>Esc</kbd> Pause</button>
+    </footer>
+    <dialog id="menu">
+      <form method="dialog">
+        <p class="series eyebrow">Red Mesa Circuit</p>
+        <h2 id="menu-title">Paused</h2>
+        <p id="result"></p>
+        <label for="assist">Steering assist <input id="assist" type="checkbox" checked /></label>
+        <button id="resume" type="button" class="action">Resume race</button
+        ><button id="restart" type="button" class="action tonal">Restart lap</button>
+      </form>
+    </dialog>
+  </body>
+</html>

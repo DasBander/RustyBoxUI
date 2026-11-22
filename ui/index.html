@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="color-scheme" content="dark" />
+    <title>RustyBox Launcher</title>
+    <link
+      rel="preload"
+      href="sdk/fonts/inter-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="app.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <div class="titlebar" data-rb-drag>
+      <div class="window-actions" data-rb-no-drag>
+        <button data-window="minimize" aria-label="Minimize">
+          <svg viewBox="0 0 12 12"><path d="M1 6.5h10" /></svg>
+        </button>
+        <button data-window="maximize" aria-label="Maximize">
+          <svg viewBox="0 0 12 12"><path d="M1.5 1.5h9v9h-9z" /></svg>
+        </button>
+        <button data-window="close" aria-label="Close">
+          <svg viewBox="0 0 12 12"><path d="m1.5 1.5 9 9m0-9-9 9" /></svg>
+        </button>
+      </div>
+    </div>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="#discover" data-route="discover" aria-label="RustyBox home">
+          <svg width="36" height="39" viewBox="0 0 36 39" fill="none" aria-hidden="true">
+            <path
+              fill="currentColor"
+              fill-rule="evenodd"
+              d="m18 1 15.6 8.6v17.8L18 37 2.4 27.4V9.6L18 1Zm0 4.6L8.5 11 18 16.3l9.5-5.3L18 5.6Zm-11.6 9v10.5l9.6 5.8V20l-9.6-5.4Zm13.6 5.5v10.8l9.6-5.8V14.6L20 20.1Z"
+            />
+          </svg>
+          <span>RustyBox</span>
+        </a>
+        <nav aria-label="Main navigation" id="navigation"></nav>
+        <section id="quick-launch" aria-label="Quick launch"></section>
+        <nav aria-label="Launcher tools" id="utility-navigation"></nav>
+        <button class="profile" id="profile-button" aria-label="Player One settings">
+          <span class="avatar">P</span><span>Player One</span>
+        </button>
+      </aside>
+      <div class="workspace">
+        <header class="topbar" data-rb-drag>
+          <label class="search"
+            ><span id="search-icon"></span
+            ><input
+              type="search"
+              id="search"
+              aria-label="Search games"
+              placeholder="Search store"
+              autocomplete="off"
+          /></label>
+          <nav class="top-links" aria-label="Store navigation">
+            <button data-route="discover" class="top-link">Discover</button>
+            <button data-route="browse" class="top-link">Browse</button>
+          </nav>
+          <div class="top-actions">
+            <button data-route="wishlist" class="top-link wishlist-link">
+              Wishlist <span id="wishlist-count" hidden></span>
+            </button>
+            <button class="icon-button" id="notifications" aria-label="Notifications"></button>
+          </div>
+        </header>
+        <main id="main" tabindex="-1"></main>
+      </div>
+    </div>
+    <div class="toast-stack" id="toasts" aria-live="polite" aria-atomic="false"></div>
+    <dialog id="detail-dialog" aria-labelledby="dialog-title"></dialog>
+  </body>
+</html>

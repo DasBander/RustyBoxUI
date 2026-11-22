@@ -1,0 +1,19 @@
+[package]
+name = "rustybox-ui"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[lib]
+name = "rustybox_ui"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+rustybox-core = { path = "../core" }
+serde_json.workspace = true
+libloading.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows.workspace = true
+webview2-com = "0.39.1"

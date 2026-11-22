@@ -1,0 +1,239 @@
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('fonts/instrument-sans.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('fonts/bricolage-grotesque.woff2') format('woff2');
+  font-weight: 400 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('fonts/ibm-plex-mono-medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+
+:root {
+  --font: 'Instrument Sans', sans-serif;
+  --display: 'Bricolage Grotesque', 'Instrument Sans', sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+  --surface: #101217;
+  --container: #1a1d24;
+  --container-high: #252933;
+  --on-surface: #f7f8fa;
+  --on-surface-variant: #c2c7d1;
+  --outline: #667080;
+  --divider: #343944;
+  --primary: #a5d0ff;
+  --on-primary: #051d35;
+  --primary-container: #16395e;
+  --on-primary-container: #e2efff;
+  --focus-ring: var(--primary);
+  --chrome-bg: var(--surface);
+  --chrome-ink: var(--on-surface);
+  --chrome-muted: var(--on-surface-variant);
+  --chrome-line: var(--divider);
+  --accent: var(--focus-ring);
+  color-scheme: dark;
+}
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--on-surface);
+  font: 450 15px/1.45 var(--font);
+  font-optical-sizing: auto;
+}
+[hidden] {
+  display: none !important;
+}
+h1,
+h2,
+h3,
+p,
+dl,
+dd {
+  margin: 0;
+}
+h1,
+h2,
+.brand {
+  font-family: var(--display);
+}
+button {
+  border-radius: 8px;
+}
+button,
+select,
+input,
+label {
+  touch-action: manipulation;
+}
+kbd,
+output {
+  font-variant-numeric: tabular-nums;
+}
+::selection {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+:where(button, input, select, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+.chrome {
+  flex: 0 0 40px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-left: 20px;
+  z-index: 2;
+  background: var(--chrome-bg);
+  color: var(--chrome-ink);
+  border-bottom: 1px solid var(--chrome-line);
+  line-height: 1;
+}
+.brand {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+.context {
+  padding-left: 14px;
+  border-left: 1px solid var(--chrome-line);
+  color: var(--chrome-muted);
+  font-size: 12px;
+  font-weight: 550;
+}
+.window-buttons {
+  display: flex;
+  align-self: stretch;
+  margin-left: auto;
+}
+.window-buttons button {
+  width: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 0;
+  color: var(--chrome-ink);
+}
+.window-buttons button:hover {
+  background: color-mix(in srgb, var(--chrome-ink) 12%, transparent);
+}
+.window-buttons button:last-child:hover {
+  color: white;
+  background: #b72437;
+}
+.window-buttons button:focus-visible {
+  outline-offset: -4px;
+}
+.window-buttons button::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+}
+[data-window='minimize']::before {
+  border-bottom: 1px solid;
+  transform: translateY(-3px);
+}
+[data-window='maximize']::before {
+  border: 1px solid;
+}
+[data-window='close']::before {
+  background:
+    linear-gradient(45deg, transparent 46%, currentColor 47% 53%, transparent 54%),
+    linear-gradient(-45deg, transparent 46%, currentColor 47% 53%, transparent 54%);
+}
+
+.action {
+  --fill: var(--primary);
+  --ink: var(--on-primary);
+  --edge: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 40px;
+  padding: 8px 20px;
+  border: 1px solid var(--edge);
+  border-radius: var(--action-radius, 999px);
+  background: var(--fill);
+  color: var(--ink);
+  font: 650 14px/1.2 var(--font);
+  white-space: nowrap;
+}
+.action.tonal {
+  --fill: var(--primary-container);
+  --ink: var(--on-primary-container);
+}
+.action.outlined {
+  --fill: transparent;
+  --ink: var(--on-surface);
+  --edge: var(--outline);
+}
+.action:not(:disabled):hover {
+  background: color-mix(in srgb, var(--ink) 10%, var(--fill));
+}
+.action:not(:disabled):active {
+  background: color-mix(in srgb, var(--ink) 17%, var(--fill));
+}
+.action:disabled {
+  background: color-mix(in srgb, var(--on-surface) 10%, transparent);
+  color: var(--on-surface-variant);
+  border-color: transparent;
+  opacity: 0.68;
+}
+.eyebrow {
+  font: 500 11px/1.3 var(--mono);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+#app-error {
+  position: fixed;
+  inset: auto 12px 8px;
+  z-index: 20;
+  padding: 12px 16px;
+  color: #fff5f4;
+  background: #91253b;
+  border-radius: 8px;
+  font-size: 14px;
+}
+rb-native-view {
+  display: block;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .action {
+    transition: background-color 120ms ease-out;
+  }
+}
+@media (max-width: 560px) {
+  .chrome {
+    padding-left: 12px;
+    gap: 9px;
+  }
+  .context {
+    padding-left: 9px;
+  }
+  .window-buttons button {
+    width: 34px;
+  }
+}
+@media (forced-colors: active) {
+  .action {
+    border: 1px solid ButtonText;
+  }
+  :where(button, input, select, [tabindex]):focus-visible {
+    outline-color: Highlight;
+  }
+}

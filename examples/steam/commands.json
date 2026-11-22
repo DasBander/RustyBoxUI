@@ -1,0 +1,21 @@
+{
+  "types": {
+    "Selection": {
+      "id": "string"
+    },
+    "Band": {
+      "station": "string",
+      "frequency": "u32"
+    },
+    "DemoPack": {
+      "id": "string",
+      "channels": "Band[]"
+    }
+  },
+  "commands": {
+    "demoPack": {
+      "input": "Selection",
+      "output": "DemoPack"
+    }
+  }
+}

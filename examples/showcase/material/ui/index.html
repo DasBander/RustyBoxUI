@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>Foundry — Material editor</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="chrome.css" />
+    <link rel="stylesheet" href="app.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <header
+      class="chrome"
+      data-rb-drag
+      data-brand="Foundry"
+      data-context="Material editor"
+    ></header>
+    <div class="document">
+      <div>
+        <small class="eyebrow">Material library</small>
+        <h1 id="name">Brushed copper</h1>
+      </div>
+      <button id="reset" class="action outlined">Reset material</button>
+    </div>
+    <main>
+      <section class="viewer">
+        <div class="panel-title"><strong>Viewport</strong><span>Studio lighting</span></div>
+        <div
+          class="stage"
+          id="stage"
+          tabindex="0"
+          role="group"
+          aria-label="Rotate preview with the arrow keys or drag"
+        >
+          <rb-native-view role="img" aria-label="Shaded material sphere"></rb-native-view
+          ><span class="stage-help">Drag to orbit</span>
+        </div>
+        <div class="viewer-foot"><span>Perspective</span><span>Direct3D 11</span></div>
+      </section>
+      <aside>
+        <h2>Surface</h2>
+        <label class="color-row" for="tint"
+          >Base color <span id="hex">#D47543</span><input type="color" id="tint" value="#d47543"
+        /></label>
+        <label class="slider" for="rough"
+          >Roughness <output id="rval">0.24</output
+          ><input type="range" id="rough" min="0" max="100" value="24"
+        /></label>
+        <label class="slider" for="metal"
+          >Metallic <output id="mval">0.90</output
+          ><input type="range" id="metal" min="0" max="100" value="90"
+        /></label>
+        <h2>Presets</h2>
+        <div id="presets" role="group" aria-label="Material presets"></div>
+      </aside>
+    </main>
+    <footer><span id="material-state">Library preset</span><span>Arrow keys to orbit</span></footer>
+  </body>
+</html>
