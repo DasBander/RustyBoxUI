@@ -1,5 +1,7 @@
 # Package a Windows application
 
+For independently installable game levels and media, use signed content packs. The pack builder publishes an encrypted manifest and reusable encrypted blocks. [Publish and install optional content](DESKTOP_APPS.md#install-optional-game-content)
+
 A generated project has two build modes. Use `cargo rustybox dev` while editing and `cargo rustybox build` to produce the directory you distribute. Both commands run from the project root. The project also carries a copy of the CLI under `tools/`.
 
 | Output | Contents | Intended use |

@@ -2,6 +2,7 @@ import { rustybox, createPreviewClient } from './sdk/rustybox.js';
 import './sdk/titlebar.js';
 import { CanyonRenderer } from './renderer.js';
 import { FlightAudio } from './audio.js';
+import { courseMenu } from './course-packs.js';
 import {
   newFlight,
   stepFlight,
@@ -9,6 +10,8 @@ import {
   GATES,
   GATE_RADIUS,
   COURSE_LENGTH,
+  COURSE_NAME,
+  useCourse,
   clock,
   clamp,
 } from './course.js';
@@ -20,7 +23,8 @@ const canvas = $('world'),
 const client = rustybox.isNative ? rustybox : createPreviewClient();
 const profileKey = 'talus.flight.v1';
 const preferences = { volume: 45, quality: 'balanced', invert: false };
-let best = null;
+const records = { copper: null, switchback: null };
+let course = 'copper';
 let saveQueue = Promise.resolve();
 let phase = 'menu',
   currentPanel = '',
@@ -45,7 +49,7 @@ function announce(message) {
 }
 
 function updateBest() {
-  $('best').textContent = best === null ? 'Unflown' : clock(best);
+  $('best').textContent = records[course] === null ? 'Unflown' : clock(records[course]);
 }
 function updateSettings() {
   $('volume').value = preferences.volume;
@@ -60,7 +64,10 @@ async function loadProfile() {
   try {
     const data = await client.invoke('storage.get', { key: profileKey }, { timeout: 2500 });
     if (data) {
-      if (Number.isFinite(data.best) && data.best > 0) best = data.best;
+      if (Number.isFinite(data.best) && data.best > 0) records.copper = data.best;
+      if (Number.isFinite(data.switchbackBest) && data.switchbackBest > 0)
+        records.switchback = data.switchbackBest;
+      preferences.course = data.course;
       if (Number.isFinite(data.volume)) preferences.volume = clamp(data.volume, 0, 100);
       if (['balanced', 'high'].includes(data.quality)) preferences.quality = data.quality;
       preferences.invert = data.invert === true;
@@ -73,7 +80,12 @@ async function loadProfile() {
 }
 
 function saveProfile() {
-  const value = { ...preferences, best };
+  const value = {
+    ...preferences,
+    course,
+    best: records.copper,
+    switchbackBest: records.switchback,
+  };
   saveQueue = saveQueue
     .then(() => client.invoke('storage.set', { key: profileKey, value }))
     .catch(() => announce('Could not save this flight profile.'));
@@ -113,8 +125,9 @@ function showPanel(name, parent = '') {
   for (const section of panel.querySelectorAll('[data-panel]'))
     section.hidden = section.dataset.panel !== name;
   $('panel-title').textContent = panelTitles[name];
+  $('course-settings').hidden = phase !== 'menu';
   $('panel-context').textContent =
-    name === 'controls' || name === 'settings' ? 'Flight deck' : 'Copper Narrows';
+    name === 'controls' || name === 'settings' ? 'Flight deck' : COURSE_NAME;
   $('back').hidden = name === 'results';
   if (!panel.open) panel.showModal();
   const first = panel.querySelector('section:not([hidden]) button, section:not([hidden]) input');
@@ -335,7 +348,9 @@ function updateHUD() {
   $('time').textContent = clock(flight.elapsed + flight.penalty);
   $('speed').textContent = Math.round(flight.speed * 3.6);
   $('gates').textContent =
-    flight.next < GATES.length ? String(flight.next + 1).padStart(2, '0') + ' / 09' : 'Finish';
+    flight.next < GATES.length
+      ? String(flight.next + 1).padStart(2, '0') + ' / ' + String(GATES.length).padStart(2, '0')
+      : 'Finish';
   $('distance').value = flight.z;
   $('charge').value = flight.charge;
   const gate = GATES[flight.next],
@@ -434,7 +449,7 @@ function startFlight() {
   $('countdown').hidden = false;
   $('countdown').textContent = '3';
   $('feedback').textContent = '';
-  $('location').textContent = 'Copper Narrows';
+  $('location').textContent = COURSE_NAME;
   canvas.focus({ preventScroll: true });
   nextFrame();
 }
@@ -465,14 +480,16 @@ function finishFlight() {
   clearInput();
   stopFrames();
   const total = Math.round((flight.elapsed + flight.penalty) * 1000) / 1000;
-  const record = best === null || total < best;
+  const record = records[course] === null || total < records[course];
   if (record) {
-    best = total;
+    records[course] = total;
     updateBest();
     saveProfile();
   }
   $('result-time').textContent = clock(total);
-  $('result-note').textContent = record ? 'New personal best.' : 'Personal best  ' + clock(best);
+  $('result-note').textContent = record
+    ? 'New personal best.'
+    : 'Personal best  ' + clock(records[course]);
   $('raw-time').textContent = clock(flight.elapsed);
   $('cleared').textContent = flight.hits + ' / ' + GATES.length;
   $('penalty').textContent = '+' + flight.penalty + ' s';
@@ -503,7 +520,28 @@ refreshDisplay();
 updateSettings();
 $('start').disabled = true;
 $('settings').disabled = true;
-loadProfile().finally(() => {
-  $('start').disabled = false;
-  $('settings').disabled = false;
-});
+function selectCourse(id, definition) {
+  useCourse(definition);
+  course = id;
+  renderer?.loadLandscape();
+  $('route-name').textContent = $('hud-course').textContent = COURSE_NAME;
+  $('field').setAttribute('aria-label', COURSE_NAME + ' flight');
+  $('route-km').textContent = (COURSE_LENGTH / 1000).toFixed(2);
+  $('distance').max = COURSE_LENGTH;
+  $('route-intro').textContent =
+    id === 'copper'
+      ? 'Race the river through nine canyon gates.'
+      : 'Follow the switchbacks through seven ridge gates.';
+  routeMap();
+  updateBest();
+  saveProfile();
+}
+loadProfile()
+  .then(() => courseMenu(selectCourse, preferences.course))
+  .catch((e) => {
+    $('course-status').textContent = e.message;
+  })
+  .finally(() => {
+    $('start').disabled = false;
+    $('settings').disabled = false;
+  });

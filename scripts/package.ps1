@@ -7,7 +7,7 @@ if (-not $SkipBuild) {
     & (Join-Path $PSScriptRoot 'build.ps1') -Configuration release
 }
 if (-not $Destination) {
-    $Destination = Join-Path $projectRoot 'dist\RustyBoxUI-0.7.0'
+    $Destination = Join-Path $projectRoot 'dist\RustyBoxUI-0.8.0'
 }
 $destination = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Destination).TrimEnd('\')
 $parent = Split-Path -Parent $destination
@@ -51,6 +51,7 @@ try {
         steam = @('Cargo.toml', 'src', 'ui', 'commands.json')
         showcase = @('Cargo.toml', 'src', 'common') + $showcaseApps
         'cpp-host' = @('main.cpp')
+        'dotnet-host' = @('DotnetHost.csproj', 'Program.cs', 'ui')
     }
     foreach ($app in $examples.Keys) {
         $appOut = New-Item -ItemType Directory -Path (Join-Path $bundle "examples\$app")
@@ -58,14 +59,16 @@ try {
             Copy-Item -LiteralPath (Join-Path $projectRoot "examples\$app\$item") -Destination $appOut.FullName -Recurse
         }
     }
+    $binding = New-Item -ItemType Directory -Path (Join-Path $bundle 'bindings\dotnet\RustyBoxUI') -Force
+    Get-ChildItem -LiteralPath (Join-Path $projectRoot 'bindings\dotnet\RustyBoxUI') -File | Copy-Item -Destination $binding.FullName
     $sdkScripts = @(
         'stage-ui.ps1', 'showcases.ps1', 'new-app.ps1', 'build-starter.ps1'
-        'dev.mjs', 'preview.mjs', 'package-app.ps1', 'msix.ps1', 'publish.ps1', 'generate-commands.mjs', 'install.ps1', 'windows-release.toml', 'cargo-paths.ps1'
+        'dev.mjs', 'vite-dev.mjs', 'content-packs.mjs', 'preview.mjs', 'package-app.ps1', 'package-dotnet.ps1', 'msix.ps1', 'publish.ps1', 'generate-commands.mjs', 'install.ps1', 'windows-release.toml', 'cargo-paths.ps1'
     )
     foreach ($file in $sdkScripts) {
         Copy-Item -LiteralPath (Join-Path $PSScriptRoot $file) -Destination (Join-Path $bundle 'scripts')
     }
-    foreach ($item in 'include', 'README.md', 'LICENSE', 'docs', 'Cargo.lock', 'package.json') {
+    foreach ($item in 'include', 'templates', 'README.md', 'LICENSE', 'docs', 'Cargo.lock', 'package.json') {
         Copy-Item -LiteralPath (Join-Path $projectRoot $item) -Destination $bundle -Recurse
     }
     Get-ChildItem -LiteralPath (Join-Path $bundle 'docs\images') -Filter '*.jpg' |
@@ -87,13 +90,22 @@ resolver = "2"
 
     & (Join-Path $PSScriptRoot 'runtime.ps1') -Sdk $bundle
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    $archive = Join-Path $parent 'RustyBoxUI-0.7.0-windows-x64.zip'
+    $archive = Join-Path $parent 'RustyBoxUI-0.8.0-windows-x64.zip'
     $stagedArchive = Join-Path $stageRoot 'release.zip'
     [IO.Compression.ZipFile]::CreateFromDirectory($bundle, $stagedArchive, 'Optimal', $true)
 
-    $runtimeArchive = Join-Path $parent 'RustyBoxUI-0.7.0-apps-windows-x64.zip'
+    $runtimeArchive = Join-Path $parent 'RustyBoxUI-0.8.0-apps-windows-x64.zip'
     $stagedRuntime = Join-Path $stageRoot 'runtime.zip'
     [IO.Compression.ZipFile]::CreateFromDirectory((Join-Path $bundle 'runtime'), $stagedRuntime, 'Optimal', $false)
+    $splice = New-Item -ItemType Directory -Path (Join-Path $stageRoot 'Splice Room')
+    $runtime = Join-Path $bundle 'runtime'
+    foreach ($item in ($runtimeDlls + @('rustybox-audio.exe', 'audio-ui.rbpak', 'LICENSE', 'licenses'))) {
+        Copy-Item -LiteralPath (Join-Path $runtime $item) -Destination $splice.FullName -Recurse
+    }
+    Get-ChildItem -LiteralPath $runtime -Directory -Filter 'audio-ui.rbpak.chunks-*' | Copy-Item -Destination $splice.FullName -Recurse
+    $spliceArchive = Join-Path $parent 'Splice-Room-0.8.0-windows-x64.zip'
+    $stagedSplice = Join-Path $stageRoot 'splice.zip'
+    [IO.Compression.ZipFile]::CreateFromDirectory($splice.FullName, $stagedSplice, 'Optimal', $false)
     if ((Split-Path -Parent $bundle) -ne $stageRoot -or (Split-Path -Parent $destination) -ne $parent) {
         throw 'Invalid SDK staging paths'
     }
@@ -119,6 +131,10 @@ resolver = "2"
     if ([IO.File]::Exists($runtimeArchive)) {
         [IO.File]::Replace($stagedRuntime,$runtimeArchive,[NullString]::Value)
     } else { [IO.File]::Move($stagedRuntime,$runtimeArchive) }
+    if ([IO.File]::Exists($spliceArchive)) {
+        [IO.File]::Replace($stagedSplice, $spliceArchive, [NullString]::Value)
+    } else { [IO.File]::Move($stagedSplice, $spliceArchive) }
+    Write-Output "Packaged Splice Room: $spliceArchive"
     Write-Output "Packaged applications: $runtimeArchive"
     Write-Output "Packaged SDK: $archive"
 } finally {

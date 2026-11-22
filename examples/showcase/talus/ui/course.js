@@ -1,6 +1,7 @@
 // World space is measured in metres. Positive Z travels downstream.
-export const COURSE_NAME = 'Copper Narrows';
-export const COURSE_LENGTH = 2220;
+export let COURSE_NAME = 'Copper Narrows';
+export let COURSE_LENGTH = 2220;
+let bend = 1;
 export const GATE_RADIUS = 10;
 export const MISS_PENALTY = 4;
 export const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
@@ -12,7 +13,7 @@ export function smoothstep(low, high, value) {
 }
 
 export function canyonCenter(z) {
-  return 32 * Math.sin(z / 183) + 13 * Math.sin(z / 76);
+  return 32 * Math.sin((z * bend) / 183) + 13 * Math.sin((z * bend) / 76);
 }
 export function riverCenter(z) {
   return canyonCenter(z) + 6 * Math.sin(z / 49 + 0.7);
@@ -46,11 +47,44 @@ export function groundHeight(x, z) {
 
 const lines = [6, -11, 13, -8, 10, -12, 9, -7, 0];
 const heights = [22, 27, 34, 25, 31, 22, 33, 25, 27];
-export const GATES = [125, 362, 602, 840, 1082, 1320, 1558, 1798, 2040].map((z, i) => ({
-  x: canyonCenter(z) + lines[i],
-  y: heights[i],
-  z,
-}));
+const builtIn = {
+  name: 'Copper Narrows',
+  length: 2220,
+  bend: 1,
+  gates: [125, 362, 602, 840, 1082, 1320, 1558, 1798, 2040].map((z, i) => ({
+    z,
+    offset: lines[i],
+    height: heights[i],
+  })),
+};
+export let GATES;
+export function useCourse(definition = builtIn) {
+  const within = (n, low, high) => Number.isFinite(n) && n >= low && n <= high;
+  const { name, length, bend: turns, gates } = definition;
+  if (
+    typeof name !== 'string' ||
+    !name.trim() ||
+    name.length > 64 ||
+    !within(length, 400, 6000) ||
+    !within(turns, 0.5, 2) ||
+    !Array.isArray(gates) ||
+    gates.length < 1 ||
+    gates.length > 50 ||
+    !gates.every(
+      (g, i) =>
+        g &&
+        within(g.z, (gates[i - 1]?.z ?? 0) + 60, length - 30) &&
+        within(g.offset, -26, 26) &&
+        within(g.height, 15, 55)
+    )
+  )
+    throw new Error('Invalid flight course.');
+  COURSE_NAME = name;
+  COURSE_LENGTH = length;
+  bend = turns;
+  GATES = gates.map(({ z, offset, height }) => ({ x: canyonCenter(z) + offset, y: height, z }));
+}
+useCourse();
 
 export function newFlight() {
   return {

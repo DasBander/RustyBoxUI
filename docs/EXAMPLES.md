@@ -13,10 +13,12 @@ Run `.\scripts\build.ps1` once from a source checkout. Choose a command below, o
 | [Couch Library](../examples/showcase/couch/ui/app.js) | `.\scripts\run.ps1 -Example couch` | `rustybox-couch.exe` | Use the D-pad, A/B and bumpers, or arrow keys, Enter, Escape and Q/E. Open Nightshift to launch the race. |
 | [Foundry](../examples/showcase/material/ui/app.js) | `.\scripts\run.ps1 -Example material` | `rustybox-material.exe` | Drag or use the arrow keys to orbit the sphere. Change roughness and metalness or choose a preset. |
 | [Relay](../examples/showcase/src/patch.rs) | `.\scripts\run.ps1 -Example patcher` | `rustybox-patcher.exe` | Pause or close a local update, resume it and verify the installed bytes. |
-| [Splice Room](../examples/showcase/audio/ui/app.js) | `.\scripts\run.ps1 -Example audio` | `rustybox-audio.exe` | Drop a WAV file, select a loop and move either edge during playback. |
+| [Splice Room](../examples/showcase/audio/ui/app.js) | `.\scripts\run.ps1 -Example audio` | `rustybox-audio.exe` | Trim a WAV, close and reopen the editor, undo the trim or export the selection. |
 | [C++ embedded host](../examples/cpp-host/main.cpp) | `.\scripts\run.ps1 -Cpp` | `rustybox-cpp-host.exe` | Run the storefront inside a Win32 window owned by C++. |
 
 Try the [starter walkthrough](GETTING_STARTED.md) for a first project. For an app with a GPU viewport, follow [the D3D11 integration guide](INTEGRATION.md#show-a-direct3d-11-texture).
+
+For the C# WinForms host and a walkthrough of Splice Room's recovery and export, see the [desktop apps guide](DESKTOP_APPS.md).
 
 ## Fly Copper Narrows
 
@@ -33,6 +35,10 @@ Nine gates mark the 2.22 km course. A missed gate adds four seconds and terrain 
 **P** or **Escape** pauses the flight. Losing focus also pauses it. Resume, open settings, restart or return to the menu from the pause screen. The **Fullscreen** button, the display setting and **F11** switch display modes. Fullscreen hides the title bar and all window controls. Press **F11** again or choose **Settings → Exit fullscreen** to return. The Windows host restores the previous window placement.
 
 The Rust host opens the local UI. WebGL draws the terrain, glider and gates, and Web Audio synthesizes wind and timing cues. The example has no JavaScript build step or CDN dependencies. [Game source](../examples/showcase/talus/ui) · [Fullscreen integration](INTEGRATION.md#fullscreen-windows)
+
+In 0.8, install **Red Switchback** from the main menu's Settings. It changes the canyon bends, shortens the route to 1.86 km and adds seven gates and a separate personal best. [Optional content packs](DESKTOP_APPS.md#install-optional-game-content)
+
+[![Banking toward the first of seven gates on Red Switchback](images/talus-switchback.jpg)](images/talus-switchback.jpg)
 
 ## Gallery
 

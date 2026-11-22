@@ -1,11 +1,12 @@
 [package]
 name = "rustybox-sdk"
-version = "0.7.0"
+version = "0.8.0"
 edition = "2024"
 publish = false
 license = "Apache-2.0"
 
 [dependencies]
+base64 = "0.22"
 rustybox-core = { path = "../core" }
 tempfile = "3"
 libloading = "0.8.9"

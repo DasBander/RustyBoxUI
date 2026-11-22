@@ -1,19 +1,32 @@
 # RustyBoxUI
 
-RustyBoxUI is a Windows x64 framework for building desktop apps with Rust, HTML, CSS and JavaScript. The current developer preview is **0.7.0**. One DLL hosts WebView2 and connects the page to native commands. A second DLL lets a Rust or C++ host put a Direct3D 11 texture behind HTML controls in the same window.
+RustyBoxUI is a Windows x64 framework for desktop apps built with Rust and web UI. One DLL hosts WebView2 and connects the page to native commands. A second DLL lets Rust and C++ hosts put Direct3D 11 textures behind HTML controls. The C# binding embeds the UI in a .NET 10 window.
 
 Release builds stream HTML, scripts and game data from encrypted resources. Ship one `.rbpak` or split large payloads into part files. [Packaging resources](#packaging-resources) · [Talus gameplay screenshots](#talus)
 
-## Windows downloads
+## Windows downloads · 0.8.0
 
-| Download | After extracting the entire ZIP |
+| Download | How to use it |
 | --- | --- |
-| [Play Talus on Windows x64](https://github.com/DasBander/RustyBoxUI/releases/download/v0.7.0/Talus-0.7.0-windows-x64.zip) | Double-click `rustybox-talus.exe` to fly Copper Narrows. |
-| [Download the Windows x64 SDK](https://github.com/DasBander/RustyBoxUI/releases/download/v0.7.0/RustyBoxUI-0.7.0-windows-x64.zip) | Open the `RustyBoxUI-0.7.0` folder and run `rustybox-starter.exe` to try the framework. |
+| [Windows x64 SDK](https://github.com/DasBander/RustyBoxUI/releases/download/v0.8.0/RustyBoxUI-0.8.0-windows-x64.zip) | Extract the ZIP, open `RustyBoxUI-0.8.0` and run `rustybox-starter.exe`. The SDK includes the DLLs, CLI, headers, examples and docs. |
+| [Splice Room WAV editor](https://github.com/DasBander/RustyBoxUI/releases/download/v0.8.0/Splice-Room-0.8.0-windows-x64.zip) | Extract the ZIP and open `rustybox-audio.exe`. Trim a WAV, reopen the editor to recover the edit, then choose **Export WAV…**. |
+| [All eleven Windows examples](https://github.com/DasBander/RustyBoxUI/releases/download/v0.8.0/RustyBoxUI-0.8.0-apps-windows-x64.zip) | Extract the ZIP and launch any example. Open `rustybox-talus.exe` to fly Copper Narrows or install Red Switchback from Settings. |
+| [RustyBoxUI NuGet package](https://github.com/DasBander/RustyBoxUI/releases/download/v0.8.0/RustyBoxUI.0.8.0.nupkg) | Save the `.nupkg` in a `packages` folder in your Windows x64 .NET 10 project. From that project, run `dotnet add package RustyBoxUI --version 0.8.0 --source ./packages`. |
 
-Both downloads are ready to run with the Microsoft Edge WebView2 Evergreen Runtime. [Get WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) · [0.7.0 release notes](https://github.com/DasBander/RustyBoxUI/releases/tag/v0.7.0)
+The Windows apps use the Microsoft Edge WebView2 Evergreen Runtime. [Get WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) · [0.8.0 release notes](https://github.com/DasBander/RustyBoxUI/releases/tag/v0.8.0)
 
 [![The Last Signal in a 1560 × 618 storefront window, with View game and Wishlist visible beneath the description](docs/images/storefront-short.jpg)](docs/images/storefront-short.jpg)
+
+## What's new in 0.8.0
+
+- **Splice Room** trims WAVs, restores the source, selection and Undo history after reopening, and exports through Windows Save As. Try it with `.\scripts\run.ps1 -Example audio`. [Document editing](docs/DESKTOP_APPS.md#edit-and-recover-a-document)
+- **Vite and TypeScript** support hot updates in the native window and bundle the frontend for distribution. Start with `cargo rustybox new MyStudio --template vite-ts`. [Frontend setup](docs/DESKTOP_APPS.md#develop-with-vite-and-typescript)
+- **Windows shell integration** gives Relay a tray menu, notifications and taskbar progress. [Desktop actions](docs/DESKTOP_APPS.md#integrate-with-the-windows-shell)
+- **Signed content packs** install, resume and update independently. Try the optional Red Switchback course in Talus. [Content packs](docs/DESKTOP_APPS.md#install-optional-game-content)
+- **Diagnostics** include `cargo rustybox doctor` and a development inspector for bridge calls. [Diagnostics](docs/DESKTOP_APPS.md#diagnose-an-installation-or-a-bridge-command)
+- **C# embedding** ships as a Windows x64 NuGet package. The SDK includes a WinForms example that calls a typed C# command from the page. [Managed host guide](docs/DESKTOP_APPS.md#embed-in-a-c-application)
+
+[![Splice Room after reopening a trimmed 24-bit stereo WAV, with Undo and Export available](docs/images/splice-trim.jpg)](docs/images/splice-trim.jpg)
 
 ## Run the starter
 
@@ -103,7 +116,7 @@ Run `cargo rustybox build` to get `out/Northstar Studio.exe` alongside its DLLs 
 
 Fly a hang glider through nine gates along the river in Copper Narrows. The 2.22 km WebGL time trial adds four seconds for each missed gate and saves your personal best. Steer with the arrow keys, hold **Space** to boost and press **F11** for a fullscreen view with the window controls hidden.
 
-To play the Windows download, extract the ZIP and open `rustybox-talus.exe`. From a built checkout, use `.\scripts\run.ps1 -Example talus`. For the browser edition, run `npm run preview:talus` from the repository root and open the local URL it prints. [Download Talus for Windows x64](https://github.com/DasBander/RustyBoxUI/releases/download/v0.7.0/Talus-0.7.0-windows-x64.zip) · [Controls and scoring](docs/EXAMPLES.md#fly-copper-narrows) · [Game source](examples/showcase/talus/ui)
+To play on Windows, extract the examples ZIP and open `rustybox-talus.exe`. From a built checkout, use `.\scripts\run.ps1 -Example talus`. For the browser edition, run `npm run preview:talus` from the repository root and open the local URL it prints. [Download the examples ZIP with Talus](https://github.com/DasBander/RustyBoxUI/releases/download/v0.8.0/RustyBoxUI-0.8.0-apps-windows-x64.zip) · [Controls and scoring](docs/EXAMPLES.md#fly-copper-narrows) · [Game source](examples/showcase/talus/ui)
 
 [![The glider banks left toward the second gate at 307 km/h in fullscreen](docs/images/talus-bank.jpg)](docs/images/talus-bank.jpg)
 
@@ -127,7 +140,7 @@ Atlas is a folder-based image browser built with the same SDK. The tree and virt
 
 The Rust SDK loads the native DLL through a small C ABI. The browser and native event loop share one UI thread, while a worker persists settings off that thread. The app loop shares state across native windows. Each window can host multiple D3D11 viewports with independent textures and display settings. Maximized windows fit the current monitor’s work area, including on mixed-DPI desktops. [Runtime architecture and source map](docs/ARCHITECTURE.md) · [Public C header](include/rustybox.h)
 
-Run `.\scripts\package.ps1` from the source checkout to create two archives in `dist/`. The SDK contains the CLI, headers, editable examples and docs. The apps ZIP contains all eleven runnable examples, two runtime DLLs and ten sealed asset packages. To distribute your own app, run `cargo rustybox package` in its project directory. [Asset protection and signing](docs/PACKAGING.md) · [Archive names and contents](docs/GETTING_STARTED.md#package-the-framework)
+Run `.\scripts\package.ps1` from the source checkout to create the Windows SDK, examples and standalone Splice Room ZIPs in `dist/`. Use `.\scripts\package-dotnet.ps1` for the NuGet package. To distribute your own app, run `cargo rustybox package` in its project directory. [Asset protection and signing](docs/PACKAGING.md) · [Archive names and contents](docs/GETTING_STARTED.md#package-the-framework)
 
 ## Desktop integration
 

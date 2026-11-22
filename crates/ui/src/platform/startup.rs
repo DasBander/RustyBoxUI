@@ -179,6 +179,7 @@ impl Startup {
                     fullscreen: Cell::new(None),
                     host_fullscreen: Cell::new(false),
                     page_fullscreen: Cell::new(false),
+                    shell: RefCell::default(),
                     controller: RefCell::new(Some(controller)),
                     webview: RefCell::new(Some(webview)),
                     events: RefCell::new(VecDeque::new()),

@@ -2,7 +2,10 @@
 use super::package::{Result, error};
 use std::path::Path;
 use windows::{
-    Win32::System::LibraryLoader::*,
+    Win32::{
+        Foundation::{FreeLibrary, HMODULE},
+        System::LibraryLoader::*,
+    },
     core::{HSTRING, PCWSTR, w},
 };
 
@@ -36,8 +39,32 @@ pub fn bind(executable: &Path, filename: &str, key: &[u8; 32]) -> Result<()> {
     }
 }
 pub fn current() -> Result<Option<(String, [u8; 32])>> {
+    descriptor(unsafe { GetModuleHandleW(None) }.map_err(error)?)
+}
+/// Inspect the resource as data, then authenticate its adjacent package. No host code runs.
+pub fn verify_host(path: &Path) -> Result<Option<String>> {
+    let path = path.canonicalize().map_err(error)?;
+    let module = unsafe {
+        LoadLibraryExW(
+            &HSTRING::from(path.as_os_str()),
+            None,
+            LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE,
+        )
+    }
+    .map_err(error)?;
+    let binding = descriptor(module);
+    unsafe { FreeLibrary(module) }.map_err(error)?;
+    let Some((name, key)) = binding? else {
+        return Ok(None);
+    };
+    let package = super::Package::open(&path.with_file_name(&name), &key)?;
+    package
+        .read("index.html")?
+        .ok_or("The package has no index.html")?;
+    Ok(Some(name))
+}
+fn descriptor(module: HMODULE) -> Result<Option<(String, [u8; 32])>> {
     unsafe {
-        let module = GetModuleHandleW(None).map_err(error)?;
         let resource = FindResourceW(Some(module), NAME, DATA);
         if resource.is_invalid() {
             let error = windows::core::Error::from_thread();

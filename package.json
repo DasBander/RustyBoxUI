@@ -1,12 +1,13 @@
 {
   "name": "rustybox-ui-showcase",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "preview": "node scripts/preview.mjs",
     "preview:talus": "node scripts/preview.mjs --talus",
+    "preview:audio": "node scripts/preview.mjs --audio",
     "preview:steam": "node scripts/preview.mjs --steam"
   }
 }

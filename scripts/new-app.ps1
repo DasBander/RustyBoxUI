@@ -1,4 +1,4 @@
-param([Parameter(Mandatory)][string]$Destination)
+param([Parameter(Mandatory)][string]$Destination, [ValidateSet('html','vite-ts')][string]$Template = 'html')
 $ErrorActionPreference = 'Stop'
 $sdk = Split-Path -Parent $PSScriptRoot
 $target = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Destination)
@@ -56,13 +56,18 @@ Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'generate-commands.mjs') -Destin
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'cargo-paths.ps1') -Destination $target
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'build-starter.ps1') -Destination (Join-Path $target 'build.ps1')
 $toolsDir = New-Item -ItemType Directory -Path (Join-Path $target 'tools')
-foreach ($name in 'dev.mjs', 'package-app.ps1', 'msix.ps1', 'publish.ps1') {
+foreach ($name in 'dev.mjs', 'vite-dev.mjs', 'content-packs.mjs', 'package-app.ps1', 'msix.ps1', 'publish.ps1') {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot $name) -Destination $toolsDir.FullName
 }
 Copy-Item -LiteralPath (Join-Path $runtimeSource 'cargo-rustybox.exe') -Destination $toolsDir.FullName
 $branding = New-Item -ItemType Directory -Path (Join-Path $target 'branding')
 Copy-Item -LiteralPath (Join-Path $vendor 'build\src\icon\rustybox.png') -Destination (Join-Path $branding.FullName 'app.png')
 $config = [IO.File]::ReadAllText((Join-Path $sdk 'examples\starter\rustybox.json')) | ConvertFrom-Json
+if ($Template -eq 'vite-ts') {
+    Copy-Item -LiteralPath (Join-Path $sdk 'templates\vite-ts') -Destination (Join-Path $target 'frontend') -Recurse
+    $config | Add-Member -NotePropertyName frontend -NotePropertyValue 'vite'
+    Write-Output 'Install the frontend dependencies with npm ci --prefix frontend before running dev or build.'
+}
 $config | Add-Member -NotePropertyName icon -NotePropertyValue 'branding/app.png'
 [IO.File]::WriteAllText((Join-Path $target 'rustybox.json'), ($config | ConvertTo-Json) + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
 Write-Output "Created $target. Run its build.ps1 to produce out\rustybox-starter.exe."

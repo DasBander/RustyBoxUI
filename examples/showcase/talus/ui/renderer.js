@@ -153,6 +153,18 @@ export class CanyonRenderer {
       ['aPosition', 'aNormal', 'aColor']
     );
     this.background = meshBuffer(gl, new Float32Array([-1, -1, 3, -1, -1, 3]), 2);
+    this.gate = meshBuffer(gl, buildGate());
+    this.glider = meshBuffer(gl, buildGlider());
+    this.quality = 'balanced';
+    this.sections = [];
+    this.loadLandscape();
+  }
+
+  loadLandscape() {
+    const gl = this.gl;
+    for (const { land, water, foliage } of this.sections) {
+      for (const mesh of [land, water, foliage]) gl.deleteBuffer(mesh.buffer);
+    }
     this.sections = buildLandscape().map(({ start, end, land, water, foliage }) => ({
       start,
       end,
@@ -160,9 +172,6 @@ export class CanyonRenderer {
       water: meshBuffer(gl, water),
       foliage: meshBuffer(gl, foliage),
     }));
-    this.gate = meshBuffer(gl, buildGate());
-    this.glider = meshBuffer(gl, buildGlider());
-    this.quality = 'balanced';
   }
 
   draw(flight) {

@@ -1,5 +1,6 @@
-import { $, ready, showError } from './chrome.js';
-import { wavInfo, peaks, timestamp } from './wave.js';
+import { $, ready, showError, rustybox } from './chrome.js';
+import { DocumentDraft, saveDocument } from './sdk/documents.js';
+import { wavInfo, exportWave, peaks, timestamp } from './wave.js';
 const canvas = $('#wave'),
   ctx = canvas.getContext('2d'),
   transport = $('#play');
@@ -30,8 +31,13 @@ let clip = null,
   sourceTime = 0;
 let bounds = null,
   drag = null,
-  sequence = 0,
   playRequest = 0;
+const draft = new DocumentDraft('splice-room');
+let documentAudio,
+  edit,
+  opening = true,
+  exporting = false,
+  revision = 0;
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 function position() {
   if (!source) return cursor;
@@ -85,7 +91,7 @@ async function toggle() {
   playAt(cursor >= start && cursor < end ? cursor : start);
   paint();
 }
-function setRange(a, b) {
+function setRange(a, b, remember = true) {
   if (!clip || !Number.isFinite(a) || !Number.isFinite(b)) return;
   const at = position(),
     min = Math.min(0.01, clip.duration);
@@ -103,6 +109,11 @@ function setRange(a, b) {
   $('#start').value = start.toFixed(3);
   $('#end').value = end.toFixed(3);
   $('#length').textContent = (end - start).toFixed(3) + ' s';
+  if (documentAudio) {
+    $('#trim').disabled = start === 0 && end === clip.duration;
+    $('#undo').disabled = !edit.history.length;
+    if (remember) rememberEdit();
+  }
   paint();
 }
 function paint() {
@@ -238,17 +249,36 @@ canvas.onpointerup = (e) => {
 canvas.onlostpointercapture = () => {
   drag = null;
 };
-async function load(bytes, name, token, isDemo) {
-  const info = wavInfo(bytes);
-  const audio = await new OfflineAudioContext(1, 1, info.rate).decodeAudioData(bytes);
-  if (token !== sequence) return;
-  const envelope = peaks(audio);
+function rememberEdit(dirty = true) {
+  edit.selection = [Math.round(start * clip.sampleRate), Math.round(end * clip.sampleRate)];
+  edit.dirty = dirty;
+  revision++;
+  try {
+    draft.update(edit);
+    $('#notice').textContent = dirty ? 'Edit saved for recovery' : 'WAV exported';
+  } catch (error) {
+    $('#notice').textContent = 'Recovery unavailable. Export before closing. ' + error.message;
+  }
+}
+
+function displaySpan(selection) {
+  const { audio, info } = documentAudio;
+  const [first, last] = edit.span;
   ++playRequest;
   discard();
   clip = audio;
-  channels = envelope;
+  if (first !== 0 || last !== audio.length) {
+    clip = new AudioBuffer({
+      length: last - first,
+      numberOfChannels: audio.numberOfChannels,
+      sampleRate: audio.sampleRate,
+    });
+    for (let c = 0; c < audio.numberOfChannels; c++) {
+      clip.copyToChannel(audio.getChannelData(c).subarray(first, last), c);
+    }
+  }
+  channels = peaks(clip);
   cursor = 0;
-  $('#filename').textContent = name;
   $('#channels').textContent =
     audio.numberOfChannels === 1
       ? 'Mono'
@@ -261,24 +291,110 @@ async function load(bytes, name, token, isDemo) {
     ' Hz  /  ' +
     info.bits +
     ' bit  /  ' +
-    audio.duration.toFixed(2) +
+    clip.duration.toFixed(2) +
     ' s';
-  $('#start').max = audio.duration;
-  $('#end').max = audio.duration;
-  setRange(isDemo ? 4 : 0, isDemo ? 12 : audio.duration);
-  $('#notice').textContent = 'Drop a WAV file to open it';
-  ready();
+  $('#start').max = clip.duration;
+  $('#end').max = clip.duration;
+  setRange(selection[0] / audio.sampleRate, selection[1] / audio.sampleRate, false);
 }
+
+async function load(blob, name, saved, demo = false) {
+  if (blob.size > 64 * 1024 * 1024) throw new Error('Choose a WAV up to 64 MiB.');
+  const bytes = await blob.arrayBuffer();
+  const info = wavInfo(bytes);
+  const audio = await new OfflineAudioContext(1, 1, info.rate).decodeAudioData(bytes);
+  if (audio.duration > 600) throw new Error('Choose a WAV up to ten minutes long.');
+  const valid = ([a, b], limit) =>
+    Number.isInteger(a) && Number.isInteger(b) && a >= 0 && a < b && b <= limit;
+  const next = saved || {
+    span: [0, audio.length],
+    history: [],
+    dirty: false,
+    selection: demo ? [4 * audio.sampleRate, 12 * audio.sampleRate] : [0, audio.length],
+  };
+  if (
+    !valid(next.span, audio.length) ||
+    !valid(next.selection, next.span[1] - next.span[0]) ||
+    !Array.isArray(next.history) ||
+    !next.history.every((span) => valid(span, audio.length))
+  ) {
+    throw new Error(
+      'The recovery record has an invalid sample range. Open the original WAV again.'
+    );
+  }
+  if (!saved) await draft.replace(name, blob, next);
+  documentAudio = { audio, info, blob, name };
+  edit = next;
+  $('#filename').textContent = name;
+  displaySpan(next.selection);
+  $('#export').disabled = false;
+  $('#notice').textContent = saved
+    ? 'Recovered edit · ' + name
+    : 'Drag the waveform to select a range';
+}
+
 async function openFile(file) {
-  if (!file) return;
-  const token = ++sequence;
+  if (!file || opening || exporting) return;
+  opening = true;
   try {
-    if (file.size > 64 * 1024 * 1024) throw new Error('Choose a WAV file under 64 MiB.');
-    await load(await file.arrayBuffer(), file.name, token, false);
+    if (edit?.dirty) {
+      const dialog = $('#replace-document');
+      dialog.returnValue = 'cancel';
+      const closed = new Promise((resolve) =>
+        dialog.addEventListener('close', resolve, { once: true })
+      );
+      dialog.showModal();
+      await closed;
+      if (dialog.returnValue !== 'replace') return;
+    }
+    await load(file, file.name);
   } catch (e) {
-    if (token === sequence) $('#notice').textContent = e.message;
+    $('#notice').textContent = e.message;
+  } finally {
+    opening = false;
   }
 }
+
+$('#trim').onclick = () => {
+  if (!clip || opening) return;
+  const origin = edit.span[0];
+  const next = [
+    origin + Math.round(start * clip.sampleRate),
+    origin + Math.round(end * clip.sampleRate),
+  ];
+  edit.history.push(edit.span);
+  edit.span = next;
+  displaySpan([0, next[1] - next[0]]);
+  rememberEdit();
+};
+$('#undo').onclick = () => {
+  if (!edit?.history.length || opening) return;
+  const trimmed = edit.span;
+  edit.span = edit.history.pop();
+  displaySpan(trimmed.map((frame) => frame - edit.span[0]));
+  rememberEdit();
+};
+async function exportSelection() {
+  if (!documentAudio || opening || exporting) return;
+  exporting = true;
+  $('#export').disabled = true;
+  const current = revision;
+  try {
+    const { audio, info, blob, name } = documentAudio;
+    const first = edit.span[0] + Math.round(start * audio.sampleRate);
+    const last = edit.span[0] + Math.round(end * audio.sampleRate);
+    const wave = exportWave(blob, info, audio, first, last);
+    const suggested = name.replace(/\.wave?$/i, '') + '-trim.wav';
+    if ((await saveDocument(rustybox, wave, suggested)) && current === revision)
+      rememberEdit(false);
+  } catch (error) {
+    $('#notice').textContent = 'Export failed. ' + error.message;
+  } finally {
+    exporting = false;
+    $('#export').disabled = false;
+  }
+}
+$('#export').onclick = exportSelection;
 $('#open').onclick = () => $('#file').click();
 $('#file').onchange = (e) => {
   openFile(e.target.files[0]);
@@ -307,16 +423,30 @@ $('#loop').onclick = () => {
 $('#start').onchange = () => setRange(Math.min(Number($('#start').value), end - 0.01), end);
 $('#end').onchange = () => setRange(start, Number($('#end').value));
 document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key.toLowerCase() === 's') {
+    e.preventDefault();
+    exportSelection();
+    return;
+  }
   if (e.code === 'Space' && !e.repeat && !['INPUT', 'BUTTON'].includes(e.target.tagName)) {
     e.preventDefault();
     toggle().catch(showError);
   }
 });
-const initial = ++sequence;
-fetch('breakwater.wav')
-  .then((r) => {
-    if (!r.ok) throw new Error('Bundled WAV could not be opened.');
-    return r.arrayBuffer();
-  })
-  .then((b) => load(b, 'Breakwater', initial, true))
-  .catch(showError);
+async function restore() {
+  try {
+    const saved = await draft.read();
+    if (saved) await load(saved.source, saved.name, saved.edit);
+    else {
+      const response = await fetch('breakwater.wav');
+      if (!response.ok) throw new Error('Bundled WAV could not be opened.');
+      await load(await response.blob(), 'Breakwater', null, true);
+    }
+  } catch (error) {
+    $('#notice').textContent = error.message;
+  } finally {
+    opening = false;
+    ready();
+  }
+}
+restore();

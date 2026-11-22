@@ -119,6 +119,7 @@ impl Session {
                 &mut token,
             )
             .map_err(err)?;
+            let weak = Rc::downgrade(self);
             web.add_NavigationStarting(
                 &NavigationStartingEventHandler::create(Box::new(move |_, args| {
                     if let Some(args) = args {
@@ -126,6 +127,8 @@ impl Session {
                         args.Uri(&mut uri)?;
                         if !origin.trusts(&CoTaskMemPWSTR::from(uri).to_string()) {
                             args.SetCancel(true)?;
+                        } else if let Some(session) = weak.upgrade() {
+                            session.emit(json!({ "event": "navigation_starting" }));
                         }
                     }
                     Ok(())

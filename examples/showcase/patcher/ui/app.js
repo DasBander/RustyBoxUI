@@ -23,10 +23,64 @@ let state = null,
   inFlight = false,
   generation = 0,
   lastSnapshot = '';
+let desktopSnapshot;
+function trayOptions(running) {
+  return {
+    tooltip: 'Relay game updates',
+    keepRunning: true,
+    menu: [
+      { id: 'transfer', label: running ? 'Pause update' : 'Resume update' },
+      { id: 'verify', label: 'Verify files', enabled: !running },
+    ],
+  };
+}
+async function updateDesktop(s, previous) {
+  if (!$('#tray').checked) return;
+  if (previous !== s.state) await rustybox.invoke('shell.tray', trayOptions(s.state === 'running'));
+  const mode =
+    { running: 'normal', paused: 'paused', error: 'error', checking: 'indeterminate' }[s.state] ||
+    'none';
+  await rustybox.invoke('shell.progress', {
+    state: mode,
+    completed: s.verified,
+    total: Math.max(1, s.total),
+  });
+  if (s.state === 'complete' && previous === 'running') {
+    await rustybox.invoke('shell.notify', {
+      title: 'Relay update complete',
+      body: 'The Last Signal is ready to play.',
+    });
+  }
+}
+$('#tray-setting').hidden = !rustybox.isNative;
+$('#tray').onchange = async () => {
+  const control = $('#tray');
+  control.disabled = true;
+  try {
+    await rustybox.invoke(
+      'shell.tray',
+      control.checked ? trayOptions(state === 'running') : { enabled: false }
+    );
+    if (control.checked && desktopSnapshot) await updateDesktop(desktopSnapshot, state);
+    if (!control.checked) await rustybox.invoke('shell.progress', { state: 'none' });
+  } catch (error) {
+    control.checked = false;
+    await rustybox.invoke('shell.tray', { enabled: false }).catch(() => {});
+    showError(error);
+  } finally {
+    control.disabled = false;
+  }
+};
+rustybox.addEventListener('shell-action', ({ detail }) => {
+  if (detail.id === 'transfer') command(state === 'running' ? 'pause' : 'start');
+  if (detail.id === 'verify') command('verify');
+});
 function draw(s) {
   const snapshot = JSON.stringify(s);
   if (snapshot === lastSnapshot) return;
   lastSnapshot = snapshot;
+  desktopSnapshot = s;
+  updateDesktop(s, state).catch(showError);
   state = s.state;
   $('.overview').dataset.state = state;
   $('#status').textContent = states[state][0];

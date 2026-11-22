@@ -7,6 +7,10 @@ target/
 /scripts/smoke*.ps1
 /scripts/benchmark.ps1
 node_modules/
+/bindings/dotnet/**/bin/
+/bindings/dotnet/**/obj/
+/examples/dotnet-host/bin/
+/examples/dotnet-host/obj/
 .vs/
 .env
 .env.*

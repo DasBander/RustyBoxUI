@@ -26,8 +26,11 @@
           <h1 id="filename">Breakwater</h1>
           <p id="format"></p>
         </div>
-        <button id="open" class="action">Open WAV…</button
-        ><input id="file" type="file" accept=".wav,.wave,audio/wav,audio/x-wav" hidden />
+        <div class="file-actions">
+          <button id="open" class="action outlined">Open WAV…</button>
+          <button id="export" class="action" disabled>Export WAV…</button>
+        </div>
+        <input id="file" type="file" accept=".wav,.wave,audio/wav,audio/x-wav" hidden />
       </div>
       <section class="timeline" aria-label="Waveform editor">
         <div class="timeline-head"><strong>Waveform</strong><span id="channels"></span></div>
@@ -51,8 +54,20 @@
           ><label>End <input id="end" type="number" min="0" step=".001" /> s</label>
           <div><small>Length</small><output id="length"></output></div>
         </div>
+        <div class="edit-actions">
+          <button id="undo" class="action outlined" disabled>Undo trim</button>
+          <button id="trim" class="action tonal" disabled>Trim to selection</button>
+        </div>
       </section>
     </main>
+    <dialog id="replace-document" aria-labelledby="replace-title">
+      <h2 id="replace-title">Open another WAV?</h2>
+      <p>The current edit will be replaced. Export it first to keep a separate WAV.</p>
+      <form method="dialog">
+        <button class="action tonal" value="cancel" autofocus>Keep editing</button>
+        <button class="action" value="replace">Open file</button>
+      </form>
+    </dialog>
     <footer>
       <span id="notice" role="status">Drop a WAV file to open it</span
       ><span>Space &nbsp; Play / pause</span>

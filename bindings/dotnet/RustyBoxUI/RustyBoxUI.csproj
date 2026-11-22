@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>RustyBoxUI</PackageId>
+    <Version>0.8.0</Version>
+    <Authors>RustyBoxUI contributors</Authors>
+    <Description>Embed a RustyBoxUI WebView2 window in a Windows x64 .NET application.</Description>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/DasBander/RustyBoxUI</RepositoryUrl>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="$(NativeRuntimeDir)/rustybox_ui.dll;$(NativeRuntimeDir)/rustybox_graphics.dll" Pack="true" PackagePath="runtimes/win-x64/native/" />
+    <None Include="../../../LICENSE" Pack="true" PackagePath="licenses/" />
+    <None Include="$(NoticesDir)/**/*" Pack="true" PackagePath="licenses/" />
+    <None Update="README.md" Pack="true" PackagePath="/" />
+    <None Include="../../../ui/sdk/rustybox.js" Pack="true" PackagePath="contentFiles/any/any/ui/sdk/" PackageCopyToOutput="true" BuildAction="Content" />
+  </ItemGroup>
+</Project>

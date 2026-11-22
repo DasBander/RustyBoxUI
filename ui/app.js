@@ -401,7 +401,7 @@ function settings() {
       <section class="runtime-card">
         <h2>About RustyBox</h2>
         <div class="runtime-row">
-          <span>Version</span><strong>${esc(runtime?.version || '0.7.0')}</strong>
+          <span>Version</span><strong>${esc(runtime?.version || '0.8.0')}</strong>
         </div>
         <div class="runtime-row">
           <span>Runtime</span><strong>${client.isNative ? 'WebView2' : 'Browser preview'}</strong>

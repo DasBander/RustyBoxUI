@@ -1,0 +1,38 @@
+.rb-inspector {
+  margin: auto;
+  width: min(42rem, 90vw);
+  max-height: 70vh;
+  padding: 1.2rem;
+  overflow: auto;
+  color: #eef1f5;
+  background: #20242c;
+  border: 1px solid #667384;
+  border-radius: 0.7rem;
+}
+.rb-inspector h2 {
+  display: inline;
+  font-size: 1.3rem;
+}
+.rb-inspector button {
+  float: right;
+  padding: 0.4rem 0.8rem;
+}
+.rb-inspector ol {
+  clear: both;
+  margin: 1.2rem 0 0;
+  padding: 0;
+  list-style: none;
+  font:
+    13px/1.6 Consolas,
+    monospace;
+}
+.rb-inspector li {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #444b54;
+}
+.rb-inspector .failed {
+  color: #ffa895;
+}
+.rb-inspector::backdrop {
+  background: #0008;
+}

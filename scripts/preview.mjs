@@ -3,8 +3,10 @@ import { readFile, stat } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const shared = fileURLToPath(new URL('../ui/', import.meta.url));
-const talus = process.argv.includes('--talus');
-const talusUi = fileURLToPath(new URL('../examples/showcase/talus/ui/', import.meta.url));
+const showcase = ['talus', 'audio'].find((name) => process.argv.includes('--' + name));
+const showcaseUi =
+  showcase && fileURLToPath(new URL('../examples/showcase/' + showcase + '/ui/', import.meta.url));
+const commonUi = fileURLToPath(new URL('../examples/showcase/common/', import.meta.url));
 const steam = process.argv.includes('--steam');
 const steamUi = fileURLToPath(new URL('../examples/steam/ui/', import.meta.url));
 const port = Number(process.env.PORT || 4173);
@@ -16,6 +18,7 @@ const types = {
   '.json': 'application/json',
   '.webp': 'image/webp',
   '.woff2': 'font/woff2',
+  '.wav': 'audio/wav',
   '.md': 'text/plain; charset=utf-8',
 };
 createServer(async (request, response) => {
@@ -25,7 +28,14 @@ createServer(async (request, response) => {
       ['/catalog.js', '/theme.css'].includes(pathname) ||
       pathname.startsWith('/sdk/') ||
       pathname.startsWith('/art/');
-    const root = talus && !useShared ? talusUi : steam && !useShared ? steamUi : shared;
+    const useCommon =
+      showcase &&
+      (['/chrome.js', '/chrome.css'].includes(pathname) || pathname.startsWith('/fonts/'));
+    const root = useShared
+      ? shared
+      : useCommon
+        ? commonUi
+        : showcaseUi || (steam ? steamUi : shared);
     const path = resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
     if (!path.startsWith(resolve(root) + sep)) {
       response.writeHead(403);

@@ -2,6 +2,7 @@
 pub mod activation;
 mod app;
 mod commands;
+pub mod documents;
 pub mod files;
 mod jobs;
 pub use app::{Action, App, Windows};

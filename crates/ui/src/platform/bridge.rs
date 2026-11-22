@@ -80,6 +80,7 @@ impl Session {
                 "composition": self.composition.is_some(),
             })),
             "diagnostics.echo" => Ok(params),
+            method if method.starts_with("shell.") => self.shell_command(method, params),
             "window.fullscreen" => {
                 let supported = self.hwnd == top;
                 if let Some(value) = params.get("enabled") {

@@ -42,7 +42,12 @@ pub const AUDIO: App = App {
     key: "audio",
     title: "Splice Room — Wave editor",
     shader: None,
-    setup: None,
+    setup: Some(|_, commands, _, _| {
+        commands.register("host.saveDocument", |state, view, request| {
+            state.saves.handle(view.hwnd(), "wav", request)
+        });
+        Ok(())
+    }),
 };
 pub const COUCH: App = App {
     key: "couch",
@@ -74,6 +79,7 @@ fn argument(name: &str) -> Option<PathBuf> {
     None
 }
 struct State {
+    saves: rustybox_sdk::documents::DocumentSaves,
     shader: Option<(String, String)>,
     scene: Option<scene::Scene>,
     frame: Option<scene::Frame>,
@@ -187,6 +193,7 @@ fn run(app: App, hidden: bool) -> Result<()> {
     config.composed = shader.is_some();
     let mut view = config.open_with_origin(AssetOrigin::Reserved)?;
     let mut state = State {
+        saves: Default::default(),
         shader: match shader {
             Some(name) => Some((shader_text("fullscreen.hlsl")?, shader_text(name)?)),
             None => None,
@@ -208,6 +215,7 @@ fn run(app: App, hidden: bool) -> Result<()> {
                 continue;
             }
             match event["event"].as_str() {
+                Some("navigation_starting") => state.saves.cancel_pending(),
                 Some("graphics_lost") => state.scene = None,
                 Some("graphics_restored") => {
                     if let Some(frame) = state.frame.clone() {

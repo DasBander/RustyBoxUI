@@ -31,7 +31,22 @@ export class RustyBoxClient extends EventTarget {
         })
       );
   }
-  invoke(method, params = {}, { signal, timeout = 15000 } = {}) {
+  invoke(method, params = {}, options = {}) {
+    const inspect = globalThis[Symbol.for('rustybox.dev.inspect')];
+    if (!inspect) return this.#invoke(method, params, options);
+    const start = performance.now();
+    return this.#invoke(method, params, options).then(
+      (result) => {
+        inspect(method, performance.now() - start);
+        return result;
+      },
+      (error) => {
+        inspect(method, performance.now() - start, error.message);
+        throw error;
+      }
+    );
+  }
+  #invoke(method, params, { signal, timeout = 15000 } = {}) {
     if (signal?.aborted) return Promise.reject(new DOMException('Aborted', 'AbortError'));
     if (!this.#transport)
       return Promise.reject(new Error('This operation requires the RustyBox desktop host.'));
@@ -86,7 +101,7 @@ export function createPreviewClient() {
       if (method === 'runtime.info')
         return {
           name: 'RustyBoxUI',
-          version: '0.7.0',
+          version: '0.8.0',
           engine: 'Browser preview',
           platform: 'browser',
           graphicsAvailable: false,

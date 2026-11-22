@@ -1,0 +1,50 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, 'Segoe UI', sans-serif;
+  background: #14161b;
+  color: #f3f5f9;
+}
+body {
+  margin: 0;
+}
+main {
+  max-width: 32rem;
+  margin: clamp(2rem, 8vw, 5rem) auto;
+  padding: 0 1.5rem;
+}
+h1 {
+  font-size: 2.8rem;
+  letter-spacing: -0.045em;
+  margin: 0 0 1.25rem;
+}
+label,
+output {
+  display: block;
+  margin-block: 0.75rem;
+}
+form div {
+  display: flex;
+  gap: 0.5rem;
+}
+input,
+button {
+  font: inherit;
+  border-radius: 0.45rem;
+  padding: 0.7rem 1rem;
+}
+input {
+  border: 1px solid #697383;
+  background: #20252c;
+  min-width: 0;
+  flex: 1;
+}
+button {
+  background: #acd2ff;
+  color: #102641;
+  border: 0;
+  cursor: pointer;
+  font-weight: 600;
+}
+output {
+  color: #acd2ff;
+}

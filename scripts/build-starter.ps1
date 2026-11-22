@@ -12,6 +12,14 @@ try {
     } finally {
         [Console]::OutputEncoding = $encoding
     }
+    $project = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'rustybox.json')) | ConvertFrom-Json
+    $webRoot = 'ui'
+    if ($project.frontend -eq 'vite' -and !$Development) {
+        & npm.cmd --prefix frontend run build
+        if ($LASTEXITCODE) { throw 'Vite build failed. Install dependencies with npm ci --prefix frontend.' }
+        $webRoot = 'frontend/dist'
+        if (!(Test-Path -LiteralPath "$webRoot/index.html" -PathType Leaf)) { throw 'Vite must produce frontend/dist/index.html' }
+    }
     $paths = & (Join-Path $PSScriptRoot 'cargo-paths.ps1') -ProjectRoot $PSScriptRoot
     & cargo build --release --target-dir target --config $paths
     if ($LASTEXITCODE) {throw 'Starter build failed'}
@@ -25,7 +33,7 @@ try {
         Copy-Item -LiteralPath ui -Destination (Join-Path $stage.FullName 'starter-ui') -Recurse
         $out = Join-Path $targetRoot 'live'
     } else {
-        & .\tools\cargo-rustybox.exe seal --manifest rustybox.json ui (Join-Path $stage.FullName 'starter-ui.rbpak') $exe
+        & .\tools\cargo-rustybox.exe seal --manifest rustybox.json $webRoot (Join-Path $stage.FullName 'starter-ui.rbpak') $exe
         if ($LASTEXITCODE) {throw 'Asset packaging failed'}
         # Font licenses stay readable in redistributable apps.
         $assetNotices=New-Item -ItemType Directory -Path (Join-Path $stage.FullName 'licenses\assets') -Force

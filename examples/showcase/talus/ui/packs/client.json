@@ -1,0 +1,13 @@
+{
+  "publisher": {
+    "key_ops": [
+      "verify"
+    ],
+    "ext": true,
+    "kty": "EC",
+    "x": "_rzhoZKgIDWhaqg7zMO9fabQqLDRTxomnrg7nbxhvcY",
+    "y": "IfFq7VrgLrzmNyVnj2aI3wMBYXb1NIH7LW16VOoSVYE",
+    "crv": "P-256"
+  },
+  "contentKey": "/t8223dSVWWd1yU4ulSV8CvHbNGpXbJr2UlnKDykljk="
+}

@@ -155,6 +155,12 @@ unsafe extern "system" fn window_proc(
     let result = std::panic::catch_unwind(|| unsafe {
         let id = GetWindowLongPtrW(hwnd, GWLP_USERDATA) as u64;
         let active_session = get(id);
+        if let Some(result) = active_session
+            .as_ref()
+            .and_then(|s| s.shell_message(msg, lparam))
+        {
+            return result;
+        }
         if let Some(session) = &active_session
             && let Some(comp) = &session.composition
             && let Some(result) = comp.message(hwnd, msg, wparam, lparam)

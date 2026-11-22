@@ -5,10 +5,11 @@ import { watch, watchFile, unwatchFile } from 'node:fs';
 import { readFile, readdir, writeFile, cp, mkdir, rm } from 'node:fs/promises';
 import { join, resolve, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { startVite } from './vite-dev.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const live = join(root, 'target', 'live'),
   web = join(live, 'starter-ui');
-let iconPath, externalIcon;
+let iconPath, externalIcon, vite;
 let child,
   stopping = false,
   busy = false,
@@ -56,11 +57,16 @@ const client = async function () {
   poll();
 };
 async function inject() {
+  if (vite) {
+    await writeFile(join(web, 'index.html'), await vite.html());
+    return;
+  }
   const html = (await readFile(join(root, 'ui', 'index.html'), 'utf8')).replace(
     /connect-src\s+'none'/gi,
     "connect-src 'self'"
   );
-  const tag = '<script type="module" src="./__rustybox_live.js"></script>';
+  const tag =
+    '<script type="module" src="./__rustybox_live.js"></script><script type="module" src="./sdk/inspector.js"></script>';
   await writeFile(
     join(web, 'index.html'),
     html.match(/<\/head>/i) ? html.replace(/<\/head>/i, tag + '</head>') : html + tag
@@ -76,6 +82,15 @@ async function build() {
   const manifest = JSON.parse(
     (await readFile(join(root, 'rustybox.json'), 'utf8')).replace(/^\uFEFF/, '')
   );
+  if (manifest.frontend === 'vite' && !vite) {
+    vite = await startVite(root, async () => {
+      if (vite && !busy) await inject();
+    });
+  }
+  if (manifest.frontend !== 'vite' && vite) {
+    await vite.close();
+    vite = undefined;
+  }
   iconPath = manifest.icon ? resolve(root, manifest.icon).toLowerCase() : undefined;
   if (externalIcon) unwatchFile(externalIcon);
   externalIcon =
@@ -161,6 +176,7 @@ for (const sig of ['SIGINT', 'SIGTERM'])
     if (externalIcon) unwatchFile(externalIcon);
     clearTimeout(timer);
     await stopHost();
+    await vite?.close();
     process.exit();
   });
 console.log('Watching UI, Rust, commands and app branding. Press Ctrl+C to stop.');

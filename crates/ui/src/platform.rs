@@ -3,6 +3,7 @@ mod bridge;
 mod fullscreen;
 mod resource_stream;
 mod resources;
+mod shell;
 mod startup;
 mod viewport;
 mod webview;
@@ -37,6 +38,7 @@ pub struct Session {
     fullscreen: Cell<Option<fullscreen::Windowed>>,
     host_fullscreen: Cell<bool>,
     page_fullscreen: Cell<bool>,
+    shell: RefCell<shell::Shell>,
     controller: RefCell<Option<ICoreWebView2Controller>>,
     webview: RefCell<Option<ICoreWebView2>>,
     pub events: RefCell<VecDeque<Vec<u8>>>,
@@ -60,6 +62,7 @@ pub fn get(id: u64) -> Option<Rc<Session>> {
 impl Session {
     pub fn shutdown(&self) {
         self.closed.set(true);
+        self.shell.borrow_mut().remove(self.hwnd);
         let ids: Vec<_> = self.surfaces.borrow().keys().copied().collect();
         for id in ids {
             self.detach_surface(id);

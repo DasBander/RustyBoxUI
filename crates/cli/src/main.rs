@@ -1,4 +1,5 @@
 //! Cargo subcommand for creating, developing and distributing RustyBox applications.
+mod doctor;
 use std::{
     env,
     ffi::OsString,
@@ -6,7 +7,7 @@ use std::{
     process::{Command, ExitCode},
 };
 type Result<T> = std::result::Result<T, String>;
-const HELP: &str = "cargo rustybox new <directory> [--sdk <SDK>]\ncargo rustybox dev\ncargo rustybox build\ncargo rustybox package\ncargo rustybox publish\ncargo rustybox rollback <published-version>\nRun dev, build and package inside a generated project.";
+const HELP: &str = "cargo rustybox new <directory> [--template html|vite-ts] [--sdk <SDK>]\ncargo rustybox dev\ncargo rustybox build\ncargo rustybox package\ncargo rustybox doctor [directory|host.exe]\ncargo rustybox content <keygen|pack> ...\ncargo rustybox publish\ncargo rustybox rollback <published-version>\nRun dev, build and package inside a generated project.";
 fn exec(program: &str, args: &[OsString]) -> Result<()> {
     let status = Command::new(program)
         .args(args)
@@ -102,12 +103,31 @@ fn run() -> Result<()> {
             println!("{HELP}");
             Ok(())
         }
-        "new" if args.len() == 2 || (args.len() == 4 && args[2] == "--sdk") => {
-            let root = sdk_root(args.get(3))?;
-            ps(
-                &root.join("scripts/new-app.ps1"),
-                &["-Destination".into(), args[1].clone()],
-            )
+        "new" if args.len() >= 2 => {
+            let mut sdk = None;
+            let mut options = vec!["-Destination".into(), args[1].clone()];
+            for pair in args[2..].chunks(2) {
+                match pair {
+                    [flag, value] if flag == "--sdk" => sdk = Some(value),
+                    [flag, value] if flag == "--template" => {
+                        options.extend(["-Template".into(), value.clone()]);
+                    }
+                    _ => return Err(HELP.into()),
+                }
+            }
+            ps(&sdk_root(sdk)?.join("scripts/new-app.ps1"), &options)
+        }
+        "doctor" if args.len() <= 2 => doctor::run(args.get(1).map(Path::new)),
+        "content" => {
+            let local = cwd.join("tools/content-packs.mjs");
+            let script = if local.is_file() {
+                local
+            } else {
+                sdk_root(None)?.join("scripts/content-packs.mjs")
+            };
+            let mut options = vec![script.into_os_string()];
+            options.extend_from_slice(&args[1..]);
+            exec("node", &options)
         }
         "dev" if args.len() == 1 => exec("node", &[cwd.join("tools/dev.mjs").into_os_string()]),
         "build" if args.len() == 1 => ps(&cwd.join("build.ps1"), &[]),

@@ -42,10 +42,15 @@ export async function bindActions(client, root = document) {
     }
   };
   const update = () => refresh().catch(report);
+  const shellAction = ({ detail }) => {
+    if (actions.some((action) => action.id === detail?.id && action.enabled))
+      perform(detail.id).catch(report);
+  };
   await refresh();
   root.addEventListener('click', click);
   root.addEventListener('keydown', key);
   client.addEventListener('actions-changed', update);
+  client.addEventListener('shell-action', shellAction);
   return {
     refresh,
     perform,
@@ -54,6 +59,7 @@ export async function bindActions(client, root = document) {
       root.removeEventListener('click', click);
       root.removeEventListener('keydown', key);
       client.removeEventListener('actions-changed', update);
+      client.removeEventListener('shell-action', shellAction);
     },
   };
 }

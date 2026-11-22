@@ -27,6 +27,24 @@ export interface InvokeOptions {
 export class RustyBoxClient extends EventTarget {
   readonly isNative: boolean;
   invoke(
+    method: 'shell.tray',
+    params:
+      | { enabled: false }
+      | {
+          tooltip: string;
+          keepRunning?: boolean;
+          menu?: Array<{ id: string; label: string; enabled?: boolean }>;
+        }
+  ): Promise<null>;
+  invoke(
+    method: 'shell.progress',
+    params:
+      | { state: 'none' | 'indeterminate' }
+      | { state: 'normal' | 'paused' | 'error'; completed: number; total: number }
+  ): Promise<null>;
+  invoke(method: 'shell.notify', params: { title: string; body: string }): Promise<null>;
+  invoke(method: 'shell.show' | 'shell.quit'): Promise<null>;
+  invoke(
     method: 'window.fullscreen',
     params?: { enabled?: boolean },
     options?: InvokeOptions

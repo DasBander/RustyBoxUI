@@ -1,7 +1,7 @@
 //! Read development files or authenticate assets from an executable-bound release package.
 mod binding;
 mod package;
-pub use binding::bind;
+pub use binding::{bind, verify_host};
 pub use package::{AssetReader, PackOptions, Package, Result, cook, cook_with_options, valid_name};
 use std::path::{Path, PathBuf};
 

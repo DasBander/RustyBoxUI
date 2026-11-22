@@ -1,5 +1,5 @@
 param(
-    [string]$Destination = (Join-Path $env:LOCALAPPDATA 'Programs\RustyBoxUI\0.7.0'),
+    [string]$Destination = (Join-Path $env:LOCALAPPDATA 'Programs\RustyBoxUI\0.8.0'),
     [switch]$CheckOnly,
     [string]$RuntimeInstaller
 )

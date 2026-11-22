@@ -108,11 +108,12 @@ For a portable ZIP and MSIX, edit `rustybox.json` and run `cargo rustybox packag
 
 ## Package the framework
 
-From the framework source checkout, run `.\scripts\package.ps1`. If you already ran the release build, use `.\scripts\package.ps1 -SkipBuild`. Both ZIPs are written to `dist/`.
+From the framework source checkout, run `.\scripts\package.ps1`. If you already ran the release build, use `.\scripts\package.ps1 -SkipBuild`. The bundles are written to `dist/`. Use `.\scripts\package-dotnet.ps1` to build the Windows x64 NuGet package. [Vite, C# and desktop integration](DESKTOP_APPS.md)
 
 | Archive | After extraction |
 | --- | --- |
-| `RustyBoxUI-0.7.0-windows-x64.zip` | Open the `RustyBoxUI-0.7.0` folder for the CLI, DLLs, import libraries, C header, editable examples, screenshots and documentation. |
-| `RustyBoxUI-0.7.0-apps-windows-x64.zip` | Open `rustybox-launcher.exe` for the storefront or `rustybox-starter.exe` for the starter. Keep the executable, DLLs, `.rbpak` files and license notices together. |
+| `Splice-Room-0.8.0-windows-x64.zip` | Open `rustybox-audio.exe` to trim, recover and export a WAV. |
+| `RustyBoxUI-0.8.0-windows-x64.zip` | Open the `RustyBoxUI-0.8.0` folder for the CLI, DLLs, import libraries, C header, editable examples, screenshots and documentation. |
+| `RustyBoxUI-0.8.0-apps-windows-x64.zip` | Open `rustybox-launcher.exe` for the storefront or `rustybox-starter.exe` for the starter. Keep the executable, DLLs, `.rbpak` files and license notices together. |
 
-For a frontend-only preview from the checkout or extracted SDK, run `npm run preview` for the storefront, `npm run preview:steam` for the library, or `npm run preview:talus` for the 3D game. Open `http://127.0.0.1:4173`. Browser previews use local storage. Use the Windows hosts to exercise native commands, window controls and Direct3D.
+For a frontend-only preview from the checkout or extracted SDK, run `npm run preview` for the storefront, `npm run preview:steam` for the library, `npm run preview:audio` for Splice Room, or `npm run preview:talus` for the 3D game. Open `http://127.0.0.1:4173`. Browser previews use local storage. Use the Windows hosts to exercise native commands, window controls and Direct3D.

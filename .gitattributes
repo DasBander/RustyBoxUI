@@ -2,6 +2,9 @@
 *.jpg binary
 *.webp binary
 *.wav binary
+*.rbc binary
+*.rbpak binary
+*.rbchunk binary
 *.woff2 binary
 # Keep upstream license files byte-for-byte, including their original spacing.
 *-OFL.txt -text whitespace=-trailing-space

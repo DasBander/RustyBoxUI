@@ -44,7 +44,7 @@
           <div class="menu-content">
             <p class="eyebrow accent"><span class="rule"></span>Canyon flight</p>
             <h1 id="game-title">Talus</h1>
-            <p class="intro">Race the river through nine canyon gates.</p>
+            <p class="intro" id="route-intro">Race the river through nine canyon gates.</p>
             <nav class="menu-actions" aria-label="Game menu">
               <button class="primary" id="start">
                 Start flight <span aria-hidden="true">↗</span>
@@ -61,11 +61,12 @@
         </div>
         <footer class="route-strip">
           <div class="route-name">
-            <span class="eyebrow">Course</span><strong>Copper Narrows</strong>
+            <span class="eyebrow">Course</span><strong id="route-name">Copper Narrows</strong>
           </div>
           <canvas id="route-map" width="320" height="80" aria-hidden="true"></canvas>
           <div class="course-distance">
-            <span class="eyebrow">Distance</span><strong>2.22 <small>km</small></strong>
+            <span class="eyebrow">Distance</span
+            ><strong><span id="route-km">2.22</span> <small>km</small></strong>
           </div>
           <div class="record">
             <span class="eyebrow">Personal best</span><strong id="best">Unflown</strong>
@@ -105,7 +106,7 @@
             ><strong><span id="speed">194</span> <small>km/h</small></strong>
           </div>
           <div class="progress-wrap">
-            <span class="eyebrow">Copper Narrows</span
+            <span class="eyebrow" id="hud-course">Copper Narrows</span
             ><progress id="distance" value="0" max="2220" aria-label="Course progress"></progress>
           </div>
           <button id="boost" class="boost" aria-label="Hold to boost">
@@ -134,6 +135,20 @@
         </div>
       </section>
       <section data-panel="settings" hidden>
+        <div id="course-settings">
+          <div class="setting">
+            <label for="course-choice">Flight course</label
+            ><select id="course-choice">
+              <option value="copper">Copper Narrows</option>
+              <option value="switchback" disabled>Red Switchback</option>
+            </select>
+          </div>
+          <div class="setting">
+            <span>Red Switchback pack</span
+            ><button id="course-install" class="option" disabled>Install</button>
+          </div>
+          <output id="course-status" class="hint" aria-live="polite"></output>
+        </div>
         <div class="setting">
           <label for="volume">Sound volume</label>
           <div class="setting-control">
